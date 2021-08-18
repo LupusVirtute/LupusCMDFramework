@@ -5,18 +5,17 @@ import org.lupus.commands.core.arguments.ArgumentTypeList
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 
-class CommandBuilder(var name: String, var method: Method) {
+class CommandBuilder(var name: String, var description: String, var method: Method?) {
 
 	val aliases: MutableList<String> = mutableListOf()
 	val syntax = StringBuilder()
 	val parameters: MutableList<ArgumentType> = mutableListOf()
-	val subCommands: MutableList<CommandLupus> = mutableListOf()
+	val subCommands: MutableList<CommandLupi> = mutableListOf()
 
-	fun addAlias(vararg aliases: String): CommandBuilder {
+	fun addAlias(aliases: List<String>): CommandBuilder {
 		this.aliases.addAll(aliases)
 		return this
 	}
-
 	fun addParameter(parameter: Parameter): CommandBuilder {
 		val clazz = parameter.type
 		val argumentType = ArgumentTypeList[clazz]
@@ -34,9 +33,32 @@ class CommandBuilder(var name: String, var method: Method) {
 		}
 		return this
 	}
+	fun addParameters(parameters: List<Parameter>):CommandBuilder {
+		for (parameter in parameters) {
+			addParameter(parameter)
+		}
+		return this
+	}
 
-	fun addSubCommand(sub: CommandLupus) {
+	fun addSubCommand(sub: CommandLupi) {
 		subCommands.add(sub)
+	}
+	fun addSubCommands(sub: List<CommandLupi>) {
+		for (commandLupi in sub) {
+			addSubCommand(commandLupi)
+		}
+	}
+
+	fun build(): CommandLupi {
+		return CommandLupi(
+			name,
+			description,
+			syntax.toString(),
+			aliases,
+			subCommands,
+			method,
+			parameters
+		)
 	}
 
 }

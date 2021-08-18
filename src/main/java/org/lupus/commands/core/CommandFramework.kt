@@ -9,7 +9,7 @@ import org.lupus.commands.core.scanner.Scanner
 class CommandFramework : JavaPlugin() {
 	override fun onEnable() {
 		Bukkit.getScheduler().runTaskLater(this, Runnable {
-			Scanner.scan(this, "org.lupus.commands.core.commands")
+			Scanner(this).scan("org.lupus.commands.core.commands")
 		},1L)
 		super.onEnable()
 	}
