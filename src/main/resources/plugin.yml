@@ -1,0 +1,4 @@
+name: CommandFramework
+version: ${project.version}
+main: org.lupus.commands.core.CommandFramework
+api-version: 1.17
