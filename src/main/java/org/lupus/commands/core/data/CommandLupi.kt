@@ -112,6 +112,14 @@ class CommandLupi(
 		if(parameters.size < args.size) {
 			return super.tabComplete(sender, alias, args)
 		}
+		if(subCommands.isNotEmpty()) {
+			val subList = mutableListOf<String>()
+			for (subCommand in subCommands) {
+				subList.add(subCommand.name)
+				subList.addAll(subCommand.aliases)
+			}
+			return subList
+		}
 		val lastIDX = args.size-1
 		val parameter = parameters[lastIDX]
 
