@@ -20,10 +20,12 @@ class CommandLupi(
 	val subCommands: List<CommandLupi>,
 	val method: Method?,
 	val parameters: List<ArgumentType>,
+	val pluginRegistering: JavaPlugin,
+	val async: Boolean = false,
 	val badSubCommand: TextComponent = Component.text("Bad sub command argument").color(RED),
-	val badArgument: TextComponent = Component.text("Bad argument nr %s").color(RED),
+	val badArgument: TextComponent = Component.text("Usage: "+ syntax).color(RED),
 	// Launches when bad sender executes command
-	val notForThisSender: TextComponent = Component.text("You are not allowed to access this command").color(RED)
+	val notForThisSender: TextComponent = Component.text("You are not allowed to access this command").color(RED),
 ) : Command(name, description, syntax, aliases)
 {
 	companion object {
@@ -38,7 +40,12 @@ class CommandLupi(
 		if (method == null) {
 			return true
 		}
-		runCommand(sender, args)
+		if (!async)
+			runCommand(sender, args)
+		else
+			Bukkit.getScheduler().runTaskAsynchronously(pluginRegistering) {
+				runCommand(sender, args)
+			}
 		return true
 	}
 
@@ -66,13 +73,12 @@ class CommandLupi(
 			return
 		}
 
+
 		val clazz = method.declaringClass
 		val obj = clazz.getConstructor().newInstance()
 		// Minuse one because we take into account player
 		if (args.size < parameters.size-1) {
-			var betterContent = badArgument.content()
-			betterContent = betterContent.format(parameters.size - args.size).replace(' ', ' ')
-			sender.sendMessage(badArgument.content(betterContent))
+			sender.sendMessage(badArgument)
 			return
 		}
 		var first = true
@@ -109,22 +115,39 @@ class CommandLupi(
 			sender.sendMessage(res)
 	}
 	override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>): MutableList<String> {
-		if(parameters.size < args.size) {
-			return super.tabComplete(sender, alias, args)
-		}
+		val tabComplete = mutableListOf<String>()
 		if(subCommands.isNotEmpty()) {
-			val subList = mutableListOf<String>()
-			for (subCommand in subCommands) {
-				subList.add(subCommand.name)
-				subList.addAll(subCommand.aliases)
+			if (args.size == 1) {
+				val subList = mutableListOf<String>()
+				for (subCommand in subCommands) {
+					subList.add(subCommand.name)
+					subList.addAll(subCommand.aliases)
+				}
+				if (method == null)
+					return subList
+				else
+					tabComplete.addAll(subList)
 			}
-			return subList
+			else if (args.size > 1){
+				for (subCommand in subCommands) {
+					if (subCommand.name == args[0]) {
+						return subCommand.tabComplete(sender, alias, args)
+					}
+				}
+			}
+
+		}
+		if(parameters.size-1 < args.size) {
+			return super.tabComplete(sender, alias, args)
 		}
 		val lastIDX = args.size-1
 		val parameter = parameters[lastIDX]
 
 		val lastOne = args[lastIDX]
-		return parameter.autoComplete(sender, lastOne)
+		tabComplete.addAll(
+			parameter.autoComplete(sender, lastOne)
+		)
+		return tabComplete
 	}
 	fun registerCommand(plugin: JavaPlugin) {
 		try {

@@ -1,11 +1,12 @@
 package org.lupus.commands.core.data
 
+import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 
-class CommandBuilder(var name: String, var description: String, var method: Method?) {
+class CommandBuilder(var plugin: JavaPlugin, var name: String, var description: String, var method: Method?, val async: Boolean = false) {
 
 	val aliases: MutableList<String> = mutableListOf()
 	val syntax = StringBuilder()
@@ -57,7 +58,9 @@ class CommandBuilder(var name: String, var description: String, var method: Meth
 			aliases,
 			subCommands,
 			method,
-			parameters
+			parameters,
+			plugin,
+			async
 		)
 	}
 

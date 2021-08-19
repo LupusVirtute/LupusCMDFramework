@@ -4,10 +4,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Server
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
-import org.lupus.commands.core.annotations.Aliases
-import org.lupus.commands.core.annotations.Default
-import org.lupus.commands.core.annotations.Desc
-import org.lupus.commands.core.annotations.NotCMD
+import org.lupus.commands.core.annotations.*
 import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.data.CommandLupi
@@ -91,6 +88,7 @@ class Scanner(private val plugin: JavaPlugin) {
 		val commandName = simpleName.split(Regex("Command|CMD"))[0]
 		val description = clazz.getAnnotation(Desc::class.java)?.desc ?: ""
 		val aliases = clazz.getAnnotation(Aliases::class.java)?.aliases?.split("|") ?: arrayListOf()
+		val async = clazz.getAnnotation(Async::class.java) != null
 
 		outMsg("[LCF] Found sup command name = $commandName")
 
@@ -125,7 +123,7 @@ class Scanner(private val plugin: JavaPlugin) {
 		outMsg("   Time taken = ${System.currentTimeMillis() - timing}")
 		outMsg("[LCF] Starting building main command")
 
-		val cmdBuilder = CommandBuilder(commandName, description, defaultMethod?.method)
+		val cmdBuilder = CommandBuilder(plugin, commandName, description, defaultMethod?.method, async)
 		if (defaultMethod != null) {
 			if (defaultMethod.method != null) {
 				cmdBuilder.addParameters(defaultMethod.method!!.parameters.toList())
@@ -146,10 +144,17 @@ class Scanner(private val plugin: JavaPlugin) {
 		var first = true
 		val description = method.getAnnotation(Desc::class.java)?.desc ?: ""
 		val aliases = method.getAnnotation(Aliases::class.java)?.aliases?.split("|") ?: arrayListOf()
+		val methodPass: CommandPass? = method.getAnnotation(CommandPass::class.java)
+		val async = method.getAnnotation(Async::class.java) != null
 
-		val cmdBuilder = CommandBuilder(commandName, description, method)
+		val cmdBuilder = CommandBuilder(plugin, commandName, description, method, async)
 
 		cmdBuilder.addAlias(aliases)
+		if (methodPass != null) {
+			// TODO Make the method getting passed around
+			val name = methodPass.methodName
+
+		}
 
 		for (commandArg in commandArgs) {
 			if (!ArgumentTypeList.contains(commandArg.type)) {
