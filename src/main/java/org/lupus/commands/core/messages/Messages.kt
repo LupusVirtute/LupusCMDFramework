@@ -7,7 +7,7 @@ import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.data.CommandLupi
 
-object I18n : HashMap<JavaPlugin?, MutableMap<String, String>>() {
+object Messages : HashMap<JavaPlugin?, MutableMap<String, String>>() {
 	init {
 		// Default bindings
 		this[null] = hashMapOf()
@@ -18,7 +18,7 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, String>>() {
 	}
 	fun init(plugin: JavaPlugin) {
 		if (plugin == null)
-			throw IllegalAccessException("You can't access original I18n messages")
+			throw IllegalAccessException("You can't access original Messages object messages")
 		this[plugin] = hashMapOf()
 		Component.text().decorate()
 	}

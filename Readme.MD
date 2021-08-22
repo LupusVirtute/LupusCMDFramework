@@ -1,6 +1,6 @@
 # Modern Kotlin Spigot Command Framework  
 Were you always like why i have to code a lot of repeatable things  
-No more i represent you LupusCommandFramework  
+No more i represent to you LupusCommandFramework  
 
 Framework that will care about developers and will be powered by developers  
 

@@ -11,7 +11,7 @@ import org.lupus.commands.core.annotations.Conditions
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.types.PlayerType
 import org.lupus.commands.core.managers.ConditionManager
-import org.lupus.commands.core.messages.I18n
+import org.lupus.commands.core.messages.Messages
 import org.lupus.commands.core.utils.ReflectionUtil.getPrivateField
 import org.lupus.commands.core.utils.StringUtil
 import java.lang.reflect.Constructor
@@ -93,7 +93,7 @@ class CommandLupi(
 			val command = subCommand.fullName
 			val syntax = subCommand.usage
 			val desc = subCommand.description
-			sender.sendMessage(I18n[pluginRegistering, "help-syntax", "command", command, "syntax", syntax, "desc", desc])
+			sender.sendMessage(Messages[pluginRegistering, "help-syntax", "command", command, "syntax", syntax, "desc", desc])
 		}
 		return true
 	}
@@ -114,7 +114,7 @@ class CommandLupi(
 			&& parameters.size < args.size
 		) {
 			if (subCommandClazz == null) {
-				sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
+				sender.sendMessage(Messages[pluginRegistering, "something-wrong"])
 				return
 			}
 			val parameterTypes = getParametersTypes()
@@ -125,7 +125,7 @@ class CommandLupi(
 			}
 			catch(ex: Exception) {
 				ex.printStackTrace()
-				sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
+				sender.sendMessage(Messages[pluginRegistering, "something-wrong"])
 				return
 			}
 			val parameters = getCommandParameters(sender, args) ?: return
@@ -164,7 +164,7 @@ class CommandLupi(
 		}
 		// Minus one because we take into account player
 		if (args.size < parameters.size-1) {
-			sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
+			sender.sendMessage(Messages[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
 			return
 		}
 		val arguments = getCommandParameters(sender, args) ?: return
@@ -185,7 +185,7 @@ class CommandLupi(
 		for (parameter in parameters) {
 			if (first) {
 				if (!parameter.clazz.isAssignableFrom(sender::class.java)) {
-					sender.sendMessage(I18n[pluginRegistering, "not-for-type", "command", fullName, "syntax", syntax])
+					sender.sendMessage(Messages[pluginRegistering, "not-for-type", "command", fullName, "syntax", syntax])
 					return null
 				}
 				first = false
@@ -195,7 +195,7 @@ class CommandLupi(
 			val value = parameter.conversion(sender, args[iteration])
 			iteration++
 			if (value == null) {
-				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
+				sender.sendMessage(Messages[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
 				return null
 			}
 			arguments.add(
