@@ -9,8 +9,11 @@ object ArgumentTypeList {
 		IntegerType,
 		UIntegerType,
 
+		StringType,
+
 		OfflinePlayerType,
 		PlayerType,
+
 
 		VectorType
 	)
@@ -32,8 +35,7 @@ object ArgumentTypeList {
 		return false
 	}
 
-	fun addArgument(type: ArgumentType?) {
-		if (type == null) return
+	fun register(type: ArgumentType) {
 		arguments.add(type)
 	}
 }
