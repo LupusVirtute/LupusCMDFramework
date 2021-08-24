@@ -5,14 +5,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.lupus</groupId>
-	<artifactId>CommandFramework</artifactId>
+	<artifactId>LCommandFramework</artifactId>
 	<version>0.3</version>
 	<packaging>jar</packaging>
 
-	<name>LCF</name>
+	<name>LCommandFramework</name>
 
 	<properties>
-		<java.version>16</java.version>
+		<java.version>15</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<kotlin.version>1.5.30-RC</kotlin.version>
 	</properties>
@@ -56,10 +56,10 @@
 					</execution>
 				</executions>
 				<configuration>
-					<jvmTarget>16</jvmTarget>
-					<args>
-						<arg>-java-parameters</arg>
-					</args>
+					<jvmTarget>15</jvmTarget>
+<!--					<args>-->
+<!--						<arg>-java-parameters</arg>-->
+<!--					</args>-->
 				</configuration>
 			</plugin>
 			<plugin>
@@ -85,11 +85,6 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
-					<compilerArgs>
-						<arg>
-							-parameters
-						</arg>
-					</compilerArgs>
 
 				</configuration>
 			</plugin>

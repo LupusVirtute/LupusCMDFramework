@@ -19,7 +19,7 @@ class CommandBuilder(
 	private var permission = ""
 	private var fullName = ""
 	private val aliases: MutableList<String> = mutableListOf()
-	private val syntax = StringBuilder()
+	private var syntax = StringBuilder()
 	private val parameters: MutableList<ArgumentType> = mutableListOf()
 	private val subCommands: MutableList<CommandLupi> = mutableListOf()
 
@@ -82,6 +82,10 @@ class CommandBuilder(
 	fun setFullName(fullName: String): CommandBuilder {
 		this.fullName = fullName
 		return this
+	}
+
+	fun setSyntax(syntax: String) {
+		this.syntax = StringBuilder(syntax)
 	}
 
 	fun build(): CommandLupi {

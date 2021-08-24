@@ -9,20 +9,19 @@ import org.lupus.commands.core.data.CommandLupi
 import java.util.*
 import kotlin.collections.HashMap
 
-object Messages : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
+object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 	init {
 		// Default bindings
 		this[null] = hashMapOf()
-		val properties = Properties()
-		val config = this::class.java.classLoader.getResourceAsStream("Messages.properties")
-		if (config != null) {
-			properties.load(config)
-		}
+		loadConfigs()
+	}
 
-		this[null]!!["bad-arg"] = "<red>Usage: /<command> <syntax>"
-		this[null]!!["not-for-type"] = "<red>You aren't allowed to use this command"
-		this[null]!!["bad-permission"] = "<red>You have no permission for this command"
-		this[null]!!["something-wrong"] = "<red>Something wrong has happened when trying to execute command contact the administrator"
+	var language: String = "en"
+
+	private fun loadConfigs() {
+		val properties: Properties = Properties()
+		val config = this::class.java.classLoader.getResourceAsStream("messages.properties") ?: return
+		properties.load(config)
 	}
 	fun init(plugin: JavaPlugin) {
 		if (plugin == null)
@@ -30,12 +29,14 @@ object Messages : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		this[plugin] = hashMapOf()
 		Component.text().decorate()
 	}
-	fun init(plugin: JavaPlugin, map: Map<String, String>) {
+
+	fun init(plugin: JavaPlugin, map: Map<String, Properties>) {
 		init(plugin)
 		for (keyPair in map) {
 			this[plugin]?.put(keyPair.key, keyPair.value)
 		}
 	}
+
 	operator fun get(plugin: JavaPlugin?, index: String, vararg objects: String): Component {
 		if (this[plugin] == null) {
 			return get(null, index, *objects)
@@ -43,7 +44,16 @@ object Messages : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		if (this[plugin]!![index] == null && plugin == null) {
 			return Component.text(index)
 		}
-		val mess = this[plugin]!![index] ?: return get(null, index, *objects)
-		return MiniMessage.get().parse(mess, *objects)
+		if (this[plugin]!![language] == null) {
+			return get(plugin, index, *objects)
+		}
+		val mess = this[plugin]!![language] ?: return get(null, index,*objects)
+
+		return MiniMessage
+			.get()
+			.parse(
+				mess.getProperty(index, index),
+				*objects
+			)
 	}
 }

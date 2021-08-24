@@ -5,8 +5,8 @@ object ReflectionUtil {
 		val clazz = obj::class.java
 		val field = clazz.getDeclaredField(string)
 		field.isAccessible = true
-		val obj = field.get(obj)
+		val res = field.get(obj)
 		field.isAccessible = false
-		return obj
+		return res
 	}
 }

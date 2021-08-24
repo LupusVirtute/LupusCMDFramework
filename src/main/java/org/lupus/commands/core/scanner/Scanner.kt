@@ -93,7 +93,7 @@ class Scanner(
 		for (subCommand in command.subCommands) {
 			val cmdPass = getCommandPass(subCommand.method) ?: continue
 			subCommand.subCommands.add(cmdPass)
-
+			cmdPass.permission = subCommand.permission + cmdPass.name
 			// I hate funny dev that pointed to the class that passes command to itself :)
 			// ~Lupus
 			registerSubCommand(subCommand)
@@ -194,6 +194,7 @@ class Scanner(
 		val description = method.getAnnotation(Desc::class.java)?.desc ?: ""
 		val aliases = method.getAnnotation(Aliases::class.java)?.aliases?.split("|") ?: arrayListOf()
 		val async = method.getAnnotation(Async::class.java) != null
+		val syntax = method.getAnnotation(Syntax::class.java)
 		val permission = getPermissionForMethod(method)
 		val cmdBuilder = CommandBuilder(plugin, commandName, description, method, async)
 
@@ -217,15 +218,23 @@ class Scanner(
 		val fullName = 	method
 			.declaringClass
 			.simpleName
-			.split(Regex("Command|CMD"))[0] + " "+ commandName
+			.split(Regex("Command|CMD"))[0].lowercase() + " "+ commandName.lowercase()
+
 		cmdBuilder.setFullName(fullName)
 		cmdBuilder.setPermission(permission)
+
+		if (syntax != null)
+			cmdBuilder.setSyntax(syntax.syntax)
+
 		outMsg("[LCF] Built command $fullName")
 		outMsg("[LCF] Command Permission: $permission")
 		return cmdBuilder.build()
 	}
 
 	private fun getPermissionForMethod(method: Method): String {
+		if(method.isAnnotationPresent(NoPerm::class.java) || method.declaringClass.isAnnotationPresent(NoPerm::class.java)) {
+			return ""
+		}
 		var clazzPermission = method.declaringClass.getAnnotation(Perm::class.java)?.permission ?: method.declaringClass.simpleName
 		val methodPermission = method.getAnnotation(Perm::class.java)?.permission ?: method.name
 		if (method.isAnnotationPresent(Perm::class.java) && method.declaringClass.isAnnotationPresent(Perm::class.java)) {
