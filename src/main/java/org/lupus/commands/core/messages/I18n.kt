@@ -6,11 +6,19 @@ import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.data.CommandLupi
+import java.util.*
+import kotlin.collections.HashMap
 
-object Messages : HashMap<JavaPlugin?, MutableMap<String, String>>() {
+object Messages : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 	init {
 		// Default bindings
 		this[null] = hashMapOf()
+		val properties = Properties()
+		val config = this::class.java.classLoader.getResourceAsStream("Messages.properties")
+		if (config != null) {
+			properties.load(config)
+		}
+
 		this[null]!!["bad-arg"] = "<red>Usage: /<command> <syntax>"
 		this[null]!!["not-for-type"] = "<red>You aren't allowed to use this command"
 		this[null]!!["bad-permission"] = "<red>You have no permission for this command"
