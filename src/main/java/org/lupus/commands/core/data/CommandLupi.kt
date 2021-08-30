@@ -1,10 +1,12 @@
 package org.lupus.commands.core.data
 
 import net.kyori.adventure.text.TextComponent
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.SimpleCommandMap
+import org.bukkit.help.GenericCommandHelpTopic
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.annotations.CMDPass
 import org.lupus.commands.core.annotations.Conditions
@@ -50,6 +52,11 @@ class CommandLupi(
 	}
 
 	override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
+		val permission = this.permission ?: ""
+		if(!sender.isOp && permission != "" && !sender.hasPermission(permission)) {
+			sender.sendMessage(I18n[pluginRegistering, "no-perm", "permission", permission ?: ""])
+			return true
+		}
 		if (!async)
 			runCommand(sender, args)
 		else {
@@ -184,7 +191,7 @@ class CommandLupi(
 		val arguments = mutableListOf<Any>()
 		for (parameter in parameters) {
 			if (first) {
-				if (!parameter.clazz.isAssignableFrom(sender::class.java)) {
+				if (!parameter.isTheArgumentOfThisType(sender::class.java)) {
 					sender.sendMessage(I18n[pluginRegistering, "not-for-type", "command", fullName, "syntax", syntax])
 					return null
 				}
@@ -192,7 +199,8 @@ class CommandLupi(
 				arguments.add(sender)
 				continue
 			}
-			val value = parameter.conversion(sender, args[iteration])
+			val endOffset = if (parameter.argumentSpan == -1) args.size else iteration+parameter.argumentSpan
+			val value = parameter.conversion(sender, *getArgs(iteration, endOffset, args))
 			iteration++
 			if (value == null) {
 				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
@@ -214,7 +222,7 @@ class CommandLupi(
 
 	private fun sendResponse(sender: CommandSender, res: Any) {
 		if (res is String)
-			sender.sendMessage(res)
+			sender.sendMessage(MiniMessage.get().parse(res))
 		if (res is TextComponent)
 			sender.sendMessage(res)
 		if (res is Array<*> && res.size >= 1)
@@ -246,9 +254,11 @@ class CommandLupi(
 			}
 			else if (parameters.size < args.size){
 				for (subCommand in subCommands) {
-					val lastIDX = parameters.size
-					val prefixIDX = parameters.size
-					val arg = args[lastIDX]
+					var prefixIDX = parameters.size
+					// We need to include atleast sub command argument span so we need minimal 1
+					// When we pass it to lower parts of tab execution
+					prefixIDX = if (prefixIDX <= 0) 1 else prefixIDX
+					val arg = args[0]
 					if (
 						subCommand.name.startsWith(arg)
 						|| StringUtil.listContainsStringStartingWith(subCommand.aliases, arg)
@@ -259,14 +269,19 @@ class CommandLupi(
 			}
 
 		}
+		// Minus one because player is included in parameters
 		if(parameters.size-1 < args.size) {
 			tabComplete.addAll(PlayerType.autoComplete(sender, *args.toTypedArray()))
 			return tabComplete
 		}
-		val lastIDX = args.size-1
+		if (parameters.isEmpty()) {
+			return tabComplete
+		}
+		var lastIDX = args.size
 		val parameter = parameters[lastIDX]
-
-		val lastOne = args[lastIDX]
+		// Last argument index
+		val argsLastIDX = args.size-1
+		val lastOne = args[argsLastIDX]
 		tabComplete.addAll(
 			parameter.autoComplete(sender, lastOne)
 		)
@@ -285,14 +300,23 @@ class CommandLupi(
 
 			val commandMap = result as SimpleCommandMap
 			commandMap.register(super.getName(), plugin.name, this)
+			val helpTopic = GenericCommandHelpTopic(this)
+			Bukkit.getServer().helpMap.addTopic(helpTopic)
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}
 	}
 
 	fun getArgs(offset: Int, args: Array<out String>): Array<out String> {
-		val arguments = Array(args.size-offset) { "$it" }
-		System.arraycopy(args, offset, arguments, 0, args.size-offset)
+		return getArgs(offset,-1, args)
+	}
+
+	fun getArgs(offset: Int, end: Int, args: Array<out String>): Array<out String> {
+		var endOffset = end
+		if (endOffset == -1)
+			endOffset = args.size
+		val arguments = Array(endOffset-offset) { "$it" }
+		System.arraycopy(args, offset, arguments, 0, endOffset-offset)
 		return arguments
 	}
 }

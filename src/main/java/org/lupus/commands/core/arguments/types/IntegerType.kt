@@ -5,8 +5,8 @@ import org.lupus.commands.core.arguments.ArgumentType
 import java.util.*
 
 object IntegerType : ArgumentType(Int::class.java) {
-	override fun conversion(sender: CommandSender, vararg input: String): Any {
-		return input[0].toInt()
+	override fun conversion(sender: CommandSender, vararg input: String): Any? {
+		return input[0].toIntOrNull()
 	}
 
 	override fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String> {

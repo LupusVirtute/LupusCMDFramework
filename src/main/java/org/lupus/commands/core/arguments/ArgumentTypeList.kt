@@ -10,9 +10,11 @@ object ArgumentTypeList {
 		UIntegerType,
 
 		StringType,
+		GreedyStringType,
 
 		OfflinePlayerType,
 		PlayerType,
+		CommandSenderType,
 
 
 		VectorType

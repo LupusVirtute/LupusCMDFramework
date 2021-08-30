@@ -39,7 +39,17 @@ Tree generates with syntax represented below
 <img src='./images/PermExpl.png' width="512"/>  <br/><br/>
 
 ## Command Package prefix
-For example you have command in `org.lupus.commands.admin.badcmds.KickCMD` all of your commands sit in package `org.lupus.commands` your command package prefix will be then `pluginName.badcmds.admin.`<br/><br/>
+For example you have command in `org.lupus.commands.admin.badcmds.KickCMD` all of your commands sit in package `org.lupus.commands` your command package prefix will be then `pluginName.admin.badcmds.`<br/><br/>
 
 ## Sup Command name <br/>
-Its just superior command name lets start with the same example i gave in the previous line
+Its just superior command name lets start with the same example i gave in the previous line so we ended up with `pluginName.admin.badcmds.` now you just add class name for this example we used KickCMD so it's `pluginName.admin.badcmds.kick`
+## Your command name
+It's usually your method name nothing big
+
+# TODO
+There's a lot to do I want to do there's a list of implementation <br/>
+- [ ] Working I18n implementation for plugins to use
+- [ ] Command Life cycle events
+- [ ] Scanning and registering Life cycle events
+- [ ] Python script to show permission nodes for your code with tree graph or something
+- [ ] Test some edge cases
