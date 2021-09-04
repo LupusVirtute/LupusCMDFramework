@@ -10,9 +10,14 @@ import org.lupus.commands.core.listeners.AsyncTabComplete
 import org.lupus.commands.core.listeners.SyncTabComplete
 import org.lupus.commands.core.managers.MainCMDs
 import org.lupus.commands.core.messages.I18n
+import org.lupus.commands.core.scanner.DefaultModifiers.anyMods
+import org.lupus.commands.core.scanner.DefaultModifiers.clazzMods
+import org.lupus.commands.core.scanner.DefaultModifiers.methodMods
+import org.lupus.commands.core.scanner.DefaultModifiers.paramModifiers
 import org.lupus.commands.core.scanner.modifiers.ClazzModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
 import org.lupus.commands.core.scanner.modifiers.any.*
+import org.lupus.commands.core.scanner.modifiers.clazz.ContinuousMod
 import org.lupus.commands.core.scanner.modifiers.clazz.HelpMod
 import org.lupus.commands.core.scanner.modifiers.method.CMDPassMod
 import org.lupus.commands.core.scanner.modifiers.method.DefaultMod
@@ -32,10 +37,7 @@ class Scanner(
 	companion object {
 		private var reg = false
 	}
-	val clazzMods = mutableListOf<ClazzModifier>(HelpMod)
-	val methodMods = mutableListOf(CMDPassMod, DefaultMod, NotCMDMod)
-	val anyMods = mutableListOf(AliasesMod, AsyncMod, ConditionsMod, DescMod, NoPermModifier, SyntaxMod)
-	val paramModifiers = mutableListOf<ParameterModifier>()
+
 
 	val pluginClazzLoader: ClassLoader = plugin::class.java.classLoader
 	private var packageName: String = ""
@@ -90,6 +92,13 @@ class Scanner(
 		for (re in res) {
 			outMsg("[LCF] Scanning $re")
 			val secondClazz = clazz.classLoader.loadClass(re)
+			try{
+				secondClazz.getDeclaredConstructor()
+			}
+			catch (ex: Exception) {
+				outMsg("[LCF] Command identified as subcommand aborting")
+				continue
+			}
 			if (secondClazz.isAnnotationPresent(SubCommand::class.java))
 				continue
 			val command = ClazzScanner(
@@ -122,8 +131,6 @@ class Scanner(
 		outMsg("[LCF] Started registering commands")
 		val timing = System.currentTimeMillis()
 		for (command in commands) {
-			if (command.subCommand)
-				continue
 			MainCMDs[command.name.lowercase()] = command
 			command.registerCommand(plugin)
 		}

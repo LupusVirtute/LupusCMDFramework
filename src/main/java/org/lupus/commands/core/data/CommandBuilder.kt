@@ -32,7 +32,7 @@ class CommandBuilder(
 
 	var help: Boolean = false
 	var async: Boolean = false
-	val continuous: Boolean = false
+	var continuous: Boolean = false
 
 
 	var supCommand: CommandBuilder? = null
@@ -84,16 +84,15 @@ class CommandBuilder(
 
 		val subCommands = mutableListOf<CommandLupi>()
 		for (subCommand in this.subCommands) {
-			subCommand.fullName = """${this.fullName} ${subCommand.name}"""
-			for (commandLupi in subCommand.build()) {
-				subCommands.add(commandLupi)
-			}
+			if (!continuous && !subCommand.continuous)
+				subCommand.fullName = """${this.fullName} ${this.syntax} ${subCommand.name}"""
+			subCommands.addAll(subCommand.build())
 		}
 		if (continuous)
 			return subCommands
 		var executor: ArgumentType? = null
 		if (executorParameter != null)
-			executor = ArgumentTypeList[executorParameter!!::class.java]
+			executor = ArgumentTypeList[executorParameter!!.type]
 		val builtCommand = CommandLupi(
 			name,
 			description,
@@ -101,6 +100,7 @@ class CommandBuilder(
 			aliases,
 			subCommands,
 			method,
+			declaringClazz,
 			parameters,
 			plugin,
 			executor,

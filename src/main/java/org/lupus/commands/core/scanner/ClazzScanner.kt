@@ -10,10 +10,10 @@ class ClazzScanner(
 		private val clazz: Class<*>,
 		private val plugin: JavaPlugin,
 		private val packageName: String,
-		private val modifiers: List<ClazzModifier> = listOf(),
-		private val anyModifiers: List<AnyModifier> = listOf(),
-		private val methodModifiers: List<MethodModifier> = listOf(),
-		private val paramModifiers: List<ParameterModifier> = listOf(),
+		private val modifiers: List<ClazzModifier> = DefaultModifiers.clazzMods,
+		private val anyModifiers: List<AnyModifier> = DefaultModifiers.anyMods,
+		private val methodModifiers: List<MethodModifier> = DefaultModifiers.methodMods,
+		private val paramModifiers: List<ParameterModifier> = DefaultModifiers.paramModifiers,
 		private val namingSchema: Regex = Regex("Command|CMD")
 ) {
     fun scan(sub: Boolean = false): CommandBuilder? {

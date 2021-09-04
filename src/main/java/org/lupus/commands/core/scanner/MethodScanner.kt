@@ -15,13 +15,14 @@ import org.lupus.commands.core.utils.LogUtil.outMsg
 import java.util.logging.Level
 
 class MethodScanner(
-    val method: Method,
-    val plugin: JavaPlugin,
+	val method: Method,
+	val plugin: JavaPlugin,
 	val packageName: String,
 	val supCommand: CommandBuilder,
-    val anyModifiers: List<AnyModifier> = listOf(),
-    val methodModifiers: List<MethodModifier> = listOf(),
-    val paramModifiers: List<ParameterModifier> = listOf(),
+	val anyModifiers: List<AnyModifier> = DefaultModifiers.anyMods,
+	val methodModifiers: List<MethodModifier> = DefaultModifiers.methodMods,
+	val paramModifiers: List<ParameterModifier> = DefaultModifiers.paramModifiers,
+	val continuous: Boolean = false
 ) {
 
     fun scan(): CommandBuilder? {
