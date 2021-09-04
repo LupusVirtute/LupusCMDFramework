@@ -1,13 +1,12 @@
 package org.lupus.commands.core.data
 
 import org.bukkit.plugin.java.JavaPlugin
-import org.lupus.commands.core.annotations.CMDPass
+import org.lupus.commands.core.annotations.method.CMDPass
 import org.lupus.commands.core.annotations.ParamName
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.scanner.ClazzScanner
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
-import org.lupus.commands.core.scanner.modifiers.BaseModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
@@ -20,7 +19,7 @@ class CommandBuilder(
 ) {
 	private val pluginClazzLoader: ClassLoader = plugin::class.java.classLoader
 	var noCMD: Boolean = false
-    var permission = ""
+    var permission = getPerm()
 	private var fullName = name
 	var description: String = ""
 	var method: Method? = null
@@ -36,15 +35,40 @@ class CommandBuilder(
 
 
 	var supCommand: CommandBuilder? = null
+		set(it) {
+			if (it == null)
+				return
+			field = it
+			this.permission = getPerm()
+		}
 	var executorParameter: Parameter? = null
 	val paramModifiers: MutableList<ParameterModifier> = mutableListOf()
 	val anyModifiers: MutableList<AnyModifier> = mutableListOf()
 	val conditions: MutableList<ConditionFun> = mutableListOf()
 
-	init {
+	private fun getPerm(): String {
+		var perm = ""
+		val supCommandPrefix = supCommand?.permission ?: ""
+		// It's sure to be the last
+		var methodName = method?.name ?: ""
+		methodName = if(methodName != "") ".$methodName" else ""
+		if (supCommandPrefix != "") {
+			perm = "$supCommandPrefix$methodName"
+			return perm
+		}
+		val clazzPrefix = declaringClazz.name.removePrefix("$packageName.")
+		if (perm == "") {
+			perm = plugin.name
+		}
+		if (perm != ""){
+			perm += ".$clazzPrefix"
+		}
+		if (method != null) {
+			perm += ".${method!!.name}"
+		}
 
+		return perm
 	}
-
 
 	fun addParameter(parameter: Parameter): CommandBuilder {
 		val clazz = parameter.type
@@ -122,13 +146,14 @@ class CommandBuilder(
     fun addPass(pass: String) {
 		val subCommand = getCommandPass(method) ?: return
 		val cmd = ClazzScanner(subCommand, plugin, packageName).scan(true) ?: return
+		cmd.supCommand = this
     	this.subCommands.add(cmd)
 	}
 	private fun getCommandPass(method: Method?): Class<*>? {
 		if (method == null)
 			return null
 		val cmdPass = method.getAnnotation(CMDPass::class.java)?.commandPath ?: return null
-		return pluginClazzLoader.loadClass(cmdPass)
+		return pluginClazzLoader.loadClass("$packageName.$cmdPass")
 	}
 
 	fun addConditions(conditions: MutableList<ConditionFun>) {

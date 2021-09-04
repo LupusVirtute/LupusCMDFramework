@@ -1,6 +1,6 @@
 package org.lupus.commands.core.scanner.modifiers.method
 
-import org.lupus.commands.core.annotations.CMDPass
+import org.lupus.commands.core.annotations.method.CMDPass
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.scanner.modifiers.MethodModifier
 import java.lang.reflect.Method

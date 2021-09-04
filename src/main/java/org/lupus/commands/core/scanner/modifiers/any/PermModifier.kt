@@ -16,6 +16,7 @@ object PermModifier : AnyModifier(Perm::class.java) {
             perm.append(cmdBuilder.supCommand!!.permission + ".")
         }
         perm.append(annotation.permission)
+        cmdBuilder.permission = perm.toString()
     }
 
 }

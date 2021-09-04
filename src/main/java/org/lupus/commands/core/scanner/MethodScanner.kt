@@ -22,7 +22,7 @@ class MethodScanner(
 	val anyModifiers: List<AnyModifier> = DefaultModifiers.anyMods,
 	val methodModifiers: List<MethodModifier> = DefaultModifiers.methodMods,
 	val paramModifiers: List<ParameterModifier> = DefaultModifiers.paramModifiers,
-	val continuous: Boolean = false
+	val permissionPrefix: String = "",
 ) {
 
     fun scan(): CommandBuilder? {
@@ -35,10 +35,10 @@ class MethodScanner(
 		var first = true
 		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, method.declaringClass)
 
+		cmdBuilder.method = method
+		cmdBuilder.permission = permissionPrefix
 		cmdBuilder.supCommand = supCommand
 
-		cmdBuilder.permission = commandName
-		cmdBuilder.method = method
 
 		modify(cmdBuilder, anyModifiers)
 		modify(cmdBuilder, methodModifiers)

@@ -109,7 +109,8 @@ class Scanner(
 				anyMods,
 				methodMods,
 				paramModifiers,
-				namingSchema
+				namingSchema,
+				permissionPrefix
 			)
 				.scan()
 			if (command != null) {

@@ -37,17 +37,6 @@ class CommandLupi(
 {
 	init {
 		this.permission = permission
-		if(method != null) {
-			val conditions = method.getAnnotation(Conditions::class.java)
-			if (conditions != null) {
-				val cond = conditions.conditions.split("|")
-				for (s in cond) {
-					val conditionFun = ConditionManager[s.lowercase()] ?: continue
-					this.conditions.add(conditionFun)
-				}
-			}
-
-		}
 	}
 
 	override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
@@ -95,7 +84,7 @@ class CommandLupi(
 		val subCMD = resolveSubCommand(sender, args)
 
 		val cmdParams = getCommandParameters(sender, args)
-		if (method != null) {
+		if (method != null && subCMD == null) {
 			if (cmdParams == null) {
 				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
 				return
@@ -106,7 +95,7 @@ class CommandLupi(
 
 		if (subCMD != null) {
 			val parameterSize = cmdParams?.size ?: 0
-			if(parameterSize == args.size) {
+			if(parameterSize-1 == args.size) {
 				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
 				return
 			}

@@ -14,7 +14,8 @@ class ClazzScanner(
 		private val anyModifiers: List<AnyModifier> = DefaultModifiers.anyMods,
 		private val methodModifiers: List<MethodModifier> = DefaultModifiers.methodMods,
 		private val paramModifiers: List<ParameterModifier> = DefaultModifiers.paramModifiers,
-		private val namingSchema: Regex = Regex("Command|CMD")
+		private val namingSchema: Regex = Regex("Command|CMD"),
+		private val permissionPrefix: String = ""
 ) {
     fun scan(sub: Boolean = false): CommandBuilder? {
 		if(clazz.isAnnotationPresent(SubCommand::class.java) && !sub) {
@@ -34,6 +35,7 @@ class ClazzScanner(
 
 
 		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, clazz)
+		cmdBuilder.permission = permissionPrefix
 		modify(cmdBuilder, modifiers)
 		modify(cmdBuilder, anyModifiers);
 
@@ -46,6 +48,7 @@ class ClazzScanner(
 				anyModifiers,
 				methodModifiers,
 				paramModifiers,
+				permissionPrefix
 			)
 			val command = scanner.scan() ?: continue
 			cmdBuilder.subCommands.add(command)
