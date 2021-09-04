@@ -1,10 +1,10 @@
 # Modern Kotlin Spigot Command Framework  
-Were you always like why i have to code a lot of repeatable things  
-No more i represent to you LupusCommandFramework  
+Were you always like why i have to code a lot of repeatable things?  
+No more, I represent to you LupusCommandFramework!  
 
-Framework that will care about developers and will be powered by developers  
+Framework that will care about developers and will be powered by developers.  
 
-Here have a look  
+Here have a look:  
 ```kotlin
 class CommandFramework : JavaPlugin() {
 	override fun onEnable() {
@@ -13,10 +13,10 @@ class CommandFramework : JavaPlugin() {
 	}
 }
 ```
-All you have to do to start coding commands  
-The yourPathToCommands you just write down the package name of your command package folder  
+All you have to do to start coding commands.  
+The yourPathToCommands you just write down the package name of your command package folder.  
 
-Now for the command class  
+Now for the command class:  
 ```kotlin
 package org.lupus.commands
 
@@ -28,14 +28,14 @@ class AdminCMD {
     }
 }
 ```
-Yes thats all you need to do just write code  
-The command above will just print out to player executor hello world  
+Yes, that's all you need to do, just write code.  
+The command above will just print out to player executor "hello world".  
 
-Want command sender just change it out no problem  
+Want command sender just change it out no problem.  
 
-No more plugin.yml no more annotations  
-Did I forgot to add permission tree automatically generate for you?  
-Tree generates with syntax represented below  
+No more plugin.yml, no more annotations.  
+Did I forget to add permission tree automatically generate for you?  
+Tree generates with syntax represented below:  
 <img src='./images/PermExpl.png' width="512"/>  <br/><br/>
 
 ## Command Package prefix

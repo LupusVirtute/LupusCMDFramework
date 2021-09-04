@@ -1,4 +1,4 @@
-package org.lupus.commands.core.annotations
+package org.lupus.commands.core.annotations.general
 
 /**
  * Makes command execute async

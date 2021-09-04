@@ -3,34 +3,41 @@ package org.lupus.commands.core.scanner
 import io.papermc.lib.PaperLib
 import org.bukkit.Bukkit
 import org.bukkit.Server
-import org.bukkit.command.CommandSender
-import org.bukkit.help.IndexHelpTopic
 import org.bukkit.plugin.java.JavaPlugin
-import org.lupus.commands.core.annotations.*
-import org.lupus.commands.core.arguments.ArgumentTypeList
-import org.lupus.commands.core.data.CommandBuilder
+import org.lupus.commands.core.annotations.clazz.SubCommand
 import org.lupus.commands.core.data.CommandLupi
-import org.lupus.commands.core.events.AsyncTabComplete
-import org.lupus.commands.core.events.SyncTabComplete
+import org.lupus.commands.core.listeners.AsyncTabComplete
+import org.lupus.commands.core.listeners.SyncTabComplete
 import org.lupus.commands.core.managers.MainCMDs
-import org.lupus.commands.core.managers.RegisteredCmdClasses
 import org.lupus.commands.core.messages.I18n
+import org.lupus.commands.core.scanner.modifiers.ClazzModifier
+import org.lupus.commands.core.scanner.modifiers.ParameterModifier
+import org.lupus.commands.core.scanner.modifiers.any.*
+import org.lupus.commands.core.scanner.modifiers.clazz.HelpMod
+import org.lupus.commands.core.scanner.modifiers.method.CMDPassMod
+import org.lupus.commands.core.scanner.modifiers.method.DefaultMod
+import org.lupus.commands.core.scanner.modifiers.method.NotCMDMod
 import org.reflections.Reflections
-import org.reflections.scanners.ResourcesScanner
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.scanners.TypeAnnotationsScanner
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
-import java.lang.reflect.Method
 import java.util.logging.Level
 
 class Scanner(
 	private val plugin: JavaPlugin,
-	private val permissionPrefix: String = ""
+	private val permissionPrefix: String = "",
+	private val namingSchema: Regex = Regex("Command|CMD")
 ) {
 	companion object {
 		private var reg = false
 	}
+	val clazzMods = mutableListOf<ClazzModifier>(HelpMod)
+	val methodMods = mutableListOf(CMDPassMod, DefaultMod, NotCMDMod)
+	val anyMods = mutableListOf(AliasesMod, AsyncMod, ConditionsMod, DescMod, NoPermModifier, SyntaxMod)
+	val paramModifiers = mutableListOf<ParameterModifier>()
+
+	val pluginClazzLoader: ClassLoader = plugin::class.java.classLoader
 	private var packageName: String = ""
 	val commands: MutableList<CommandLupi> = mutableListOf()
 	fun scan(packageName: String) {
@@ -42,6 +49,7 @@ class Scanner(
 		} else if (!reg) {
 			Bukkit.getPluginManager().registerEvents(SyncTabComplete(), plugin)
 		}
+		I18n.init(plugin)
 
 		this.packageName = packageName
 		val clazz = plugin::class.java
@@ -55,7 +63,7 @@ class Scanner(
 				)
 				.setUrls(
 					ClasspathHelper.forClassLoader(
-						clazz.classLoader
+						pluginClazzLoader
 					)
 				)
 		)
@@ -67,7 +75,7 @@ class Scanner(
 
 		timing = System.currentTimeMillis()
 		val res = reflections.allTypes.filter {
-			val pattern =  Regex("$packageName.*(Command|CMD)")
+			val pattern =  Regex("$packageName.*($namingSchema)")
 			it.contains(pattern)
 		}
 
@@ -82,9 +90,23 @@ class Scanner(
 		for (re in res) {
 			outMsg("[LCF] Scanning $re")
 			val secondClazz = clazz.classLoader.loadClass(re)
-			val command = scanClass(secondClazz)
-			if (command != null)
-				commands.add(command)
+			if (secondClazz.isAnnotationPresent(SubCommand::class.java))
+				continue
+			val command = ClazzScanner(
+				secondClazz,
+				plugin,
+				packageName,
+				clazzMods,
+				anyMods,
+				methodMods,
+				paramModifiers,
+				namingSchema
+			)
+				.scan()
+			if (command != null) {
+				val built = command.build()
+				commands.addAll(built)
+			}
 			outMsg("[LCF] Scan ended successfully")
 		}
 
@@ -94,32 +116,7 @@ class Scanner(
 		outMsg("   Time elapsed = ${System.currentTimeMillis() - timing}ms")
 
 		registerCommands()
-		registerSubCommands()
 	}
-
-	private fun registerSubCommands() {
-		for (command in commands) {
-			registerSubCommand(command)
-		}
-	}
-	private fun registerSubCommand(command: CommandLupi) {
-		for (subCommand in command.subCommands) {
-			val cmdPass = getCommandPass(subCommand.method) ?: continue
-			subCommand.subCommands.add(cmdPass)
-			cmdPass.permission = subCommand.permission + cmdPass.name
-			// I hate funny dev that pointed to the class that passes command to itself :)
-			// ~Lupus
-			registerSubCommand(subCommand)
-		}
-	}
-
-	private fun getCommandPass(method: Method?): CommandLupi? {
-		if (method == null)
-			return null
-		val cmdPass = method.getAnnotation(CMDPass::class.java)?.commandPath ?: return null
-		return RegisteredCmdClasses[cmdPass]
-	}
-
 
 	private fun registerCommands() {
 		outMsg("[LCF] Started registering commands")
@@ -138,157 +135,6 @@ class Scanner(
 		outMsg("    Time elapsed = ${System.currentTimeMillis() - timing}ms")
 	}
 
-	private fun scanClass(clazz: Class<*>): CommandLupi? {
-		val simpleName = clazz.simpleName
-		val commandName = simpleName.split(Regex("Command|CMD"))[0].lowercase()
-		var description = clazz.getAnnotation(Desc::class.java)?.desc ?: ""
-		val aliases = clazz.getAnnotation(Aliases::class.java)?.aliases?.split("|") ?: arrayListOf()
-		val async = clazz.getAnnotation(Async::class.java) != null
-		val helpCMD = clazz.getAnnotation(HelpCMD::class.java) != null
-		val subCommand = clazz.getAnnotation(SubCommand::class.java) != null
-		var permission = clazz.getAnnotation(Perm::class.java)?.permission ?: ""
-		val noPerm = clazz.getAnnotation(NoPerm::class.java) != null
-
-
-		outMsg("[LCF] Found sup command name = $commandName")
-		if (commandName == "") {
-			outMsg("[LCF] Aborting command registration due to invalid naming schema")
-			return null
-		}
-
-		val timing = System.currentTimeMillis()
-		outMsg("[LCF] Started scanning commands inside /$commandName")
-		var defaultMethod: Method? = null
-		val subCommands = mutableListOf<CommandLupi>()
-		for (declaredMethod in clazz.declaredMethods) {
-			outMsg("[LCF] Scanning declared Method ${declaredMethod.name}")
-
-			if (declaredMethod.isAnnotationPresent(NotCMD::class.java)) {
-				outMsg("[LCF] Method ${declaredMethod.name} isn't command aborting...")
-				continue
-			}
-			val command = scanMethod(declaredMethod)
-			if (command != null) {
-				if (noPerm)
-					command.permission = ""
-				if (declaredMethod.isAnnotationPresent(Default::class.java)) {
-					defaultMethod = declaredMethod
-					description = command.description
-					if (permission == "")
-						permission = command.permission ?: ""
-					continue
-				}
-				else {
-					subCommands.add(command)
-				}
-			}
-
-			outMsg("[LCF] Successfully scanned method ${declaredMethod.name}")
-		}
-
-		outMsg("[LCF] Stopped scanning commands successfully scanned all commands")
-		outMsg("   Time elapsed = ${System.currentTimeMillis() - timing}ms")
-		outMsg("[LCF] Starting building main command")
-
-		val cmdBuilder = CommandBuilder(plugin, commandName, description, defaultMethod, helpCMD, async, subCommand)
-		if (defaultMethod != null) {
-			cmdBuilder.addParameters(defaultMethod.parameters.toList())
-			cmdBuilder.addAlias(aliases)
-		}
-		cmdBuilder.setFullName(commandName)
-		cmdBuilder.addSubCommands(subCommands)
-		cmdBuilder.setPermission(permission)
-
-		val builtCommand = cmdBuilder.build()
-		RegisteredCmdClasses[clazz.name] = builtCommand
-
-
-		outMsg("[LCF] Main Command Built!")
-		return builtCommand
-	}
-	private fun scanMethod(method: Method): CommandLupi? {
-		if(method.parameterCount == 0) {
-			outMsg("[LCF] INFO: Command method ${method.name} was found to not have executor parameter at least aborting..")
-			return null
-		}
-		val commandName = method.name
-		val commandArgs = method.parameters
-		var first = true
-		val description = method.getAnnotation(Desc::class.java)?.desc ?: ""
-		val aliases = method.getAnnotation(Aliases::class.java)?.aliases?.split("|") ?: arrayListOf()
-		val async = method.getAnnotation(Async::class.java) != null
-		val syntax = method.getAnnotation(Syntax::class.java)
-		val permission = getPermissionForMethod(method)
-		val cmdBuilder = CommandBuilder(plugin, commandName, description, method, async)
-
-		cmdBuilder.addAlias(aliases)
-
-		for (commandArg in commandArgs) {
-			if (!ArgumentTypeList.contains(commandArg.type)) {
-				outMsg("[LCF] ERROR: Command argument isn't defined in ArgumentTypeList did you load your command arguments before scanning class?", Level.SEVERE)
-				outMsg("If not use @NotCMD", Level.SEVERE)
-				return null
-			}
-			if (first) {
-				first = !first
-				if (!CommandSender::class.java.isAssignableFrom(commandArg.type)) {
-					outMsg("[LCF] First argument of method ${method.name} is not Bukkit CommandSender aborting")
-					return null
-				}
-
-			}
-			cmdBuilder.addParameter(commandArg)
-		}
-		val fullName = 	method
-			.declaringClass
-			.simpleName
-			.split(Regex("Command|CMD"))[0].lowercase() + " "+ commandName.lowercase()
-
-		cmdBuilder.setFullName(fullName)
-		cmdBuilder.setPermission(permission)
-
-		if (syntax != null)
-			cmdBuilder.setSyntax(syntax.syntax)
-
-		outMsg("[LCF] Built command $fullName")
-		outMsg("[LCF] Command Permission: $permission")
-		return cmdBuilder.build()
-	}
-
-	private fun getPermissionForMethod(method: Method): String {
-
-		if(method.isAnnotationPresent(NoPerm::class.java) || method.declaringClass.isAnnotationPresent(NoPerm::class.java)) {
-			return ""
-		}
-
-		var clazzPermission = method.declaringClass.getAnnotation(Perm::class.java)?.permission ?: method.declaringClass.simpleName
-		val methodPermission = method.getAnnotation(Perm::class.java)?.permission ?: method.name
-
-		if (method.isAnnotationPresent(Perm::class.java) && method.declaringClass.isAnnotationPresent(Perm::class.java)) {
-			return "$clazzPermission.$methodPermission"
-		}
-
-		if (method.declaringClass.isAnnotationPresent(Perm::class.java)) {
-			val ann = method.getAnnotation(Perm::class.java)
-			clazzPermission = "$clazzPermission.${ann.permission}"
-		}
-
-		var packagePrefix = plugin.name.lowercase() + method.declaringClass
-			.name
-			.removePrefix("$packageName.")
-			.removeSuffix(".${method.declaringClass.simpleName}")
-		// These last two checks are sanity checks if something goes wrong we dont have 2 dots near each other
-		if(packagePrefix != "") {
-			packagePrefix += "."
-			packagePrefix = packagePrefix.lowercase()
-		}
-		if (clazzPermission != "") {
-			clazzPermission += "."
-			clazzPermission = clazzPermission.lowercase()
-		}
-		val permission = "$permissionPrefix$packagePrefix$clazzPermission${method.name.lowercase()}"
-		return permission
-	}
 
 
 	private fun outMsg(string: String, level: Level) {

@@ -1,95 +1,100 @@
 package org.lupus.commands.core.data
 
 import org.bukkit.plugin.java.JavaPlugin
+import org.lupus.commands.core.annotations.CMDPass
 import org.lupus.commands.core.annotations.ParamName
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
+import org.lupus.commands.core.scanner.ClazzScanner
+import org.lupus.commands.core.scanner.modifiers.AnyModifier
+import org.lupus.commands.core.scanner.modifiers.BaseModifier
+import org.lupus.commands.core.scanner.modifiers.ParameterModifier
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 
 class CommandBuilder(
 	var plugin: JavaPlugin,
 	var name: String,
-	var description: String,
-	var method: Method?,
-	val help: Boolean = false,
-	val async: Boolean = false,
-	val subCommand: Boolean = false
+	val packageName: String,
+	val declaringClazz: Class<*>
 ) {
-	private var permission = ""
-	private var fullName = ""
-	private val aliases: MutableList<String> = mutableListOf()
-	private var syntax = StringBuilder()
-	private val parameters: MutableList<ArgumentType> = mutableListOf()
-	private val subCommands: MutableList<CommandLupi> = mutableListOf()
+	private val pluginClazzLoader: ClassLoader = plugin::class.java.classLoader
+	var noCMD: Boolean = false
+    var permission = ""
+	private var fullName = name
+	var description: String = ""
+	var method: Method? = null
+	val aliases: MutableList<String> = mutableListOf()
+	var syntax = StringBuilder()
 
-	fun addAlias(aliases: List<String>): CommandBuilder {
-		this.aliases.addAll(aliases)
-		return this
+	val parameters: MutableList<ArgumentType> = mutableListOf()
+	val subCommands: MutableList<CommandBuilder> = mutableListOf()
+
+	var help: Boolean = false
+	var async: Boolean = false
+	val continuous: Boolean = false
+
+
+	var supCommand: CommandBuilder? = null
+	var executorParameter: Parameter? = null
+	val paramModifiers: MutableList<ParameterModifier> = mutableListOf()
+	val anyModifiers: MutableList<AnyModifier> = mutableListOf()
+	val conditions: MutableList<ConditionFun> = mutableListOf()
+
+	init {
+
 	}
 
-	private var firstParameter: Boolean = true
 
 	fun addParameter(parameter: Parameter): CommandBuilder {
 		val clazz = parameter.type
 		val parameterName = parameter.getAnnotation(ParamName::class.java)?.paramName ?: parameter.name
 
+		for (paramModifier in paramModifiers) {
+			val ann = parameter.getAnnotation(paramModifier.annotation) ?: continue
+			paramModifier.modify(this, ann, parameter)
+		}
+		for (modifier in anyModifiers) {
+			val ann = parameter.getAnnotation(modifier.annotation) ?: continue
+			modifier.modify(this, ann, parameter)
+		}
+
 		val argumentType = ArgumentTypeList[clazz]
 			?: throw IllegalArgumentException("clazz argument isn't ArgumentType")
+
+
 		if (argumentType.argumentSpan > 1) {
 			val argumentNames = argumentType.argumentName.split(',')
+
 			for (i in 0..argumentType.argumentSpan) {
 				this.parameters.add(argumentType)
-				if(!firstParameter)
-					syntax.append("[${parameterName}.${argumentNames[i]} ")
-				else
-					firstParameter = false
+				syntax.append("[${parameterName}.${argumentNames[i]}] ")
 			}
+
 		}
 		else {
 			this.parameters.add(argumentType)
-			if(!firstParameter)
-				syntax.append("[${parameterName}] ")
-			else
-				firstParameter = false
+
+			syntax.append("[${parameterName}] ")
 		}
 		return this
 	}
 
-	fun addParameters(parameters: List<Parameter>):CommandBuilder {
-		for (parameter in parameters) {
-			addParameter(parameter)
+	fun build(): List<CommandLupi> {
+
+		val subCommands = mutableListOf<CommandLupi>()
+		for (subCommand in this.subCommands) {
+			subCommand.fullName = """${this.fullName} ${subCommand.name}"""
+			for (commandLupi in subCommand.build()) {
+				subCommands.add(commandLupi)
+			}
 		}
-		return this
-	}
-
-	fun addSubCommand(sub: CommandLupi): CommandBuilder {
-		subCommands.add(sub)
-		return this
-	}
-
-	fun addSubCommands(sub: List<CommandLupi>): CommandBuilder {
-		for (commandLupi in sub) {
-			addSubCommand(commandLupi)
-		}
-		return this
-	}
-
-	fun setPermission(permission: String): CommandBuilder {
-		this.permission = permission
-		return this
-	}
-	fun setFullName(fullName: String): CommandBuilder {
-		this.fullName = fullName
-		return this
-	}
-
-	fun setSyntax(syntax: String) {
-		this.syntax = StringBuilder(syntax)
-	}
-
-	fun build(): CommandLupi {
-		return CommandLupi(
+		if (continuous)
+			return subCommands
+		var executor: ArgumentType? = null
+		if (executorParameter != null)
+			executor = ArgumentTypeList[executorParameter!!::class.java]
+		val builtCommand = CommandLupi(
 			name,
 			description,
 			syntax.toString(),
@@ -98,12 +103,37 @@ class CommandBuilder(
 			method,
 			parameters,
 			plugin,
+			executor,
+			conditions,
 			permission,
 			fullName,
 			help,
 			async,
-			subCommand
+			supCommand != null
+		)
+		println(" ")
+		println(builtCommand.toString())
+		println(" ")
+		return listOf(
+			builtCommand
 		)
 	}
+
+    fun addPass(pass: String) {
+		val subCommand = getCommandPass(method) ?: return
+		val cmd = ClazzScanner(subCommand, plugin, packageName).scan(true) ?: return
+    	this.subCommands.add(cmd)
+	}
+	private fun getCommandPass(method: Method?): Class<*>? {
+		if (method == null)
+			return null
+		val cmdPass = method.getAnnotation(CMDPass::class.java)?.commandPath ?: return null
+		return pluginClazzLoader.loadClass(cmdPass)
+	}
+
+	fun addConditions(conditions: MutableList<ConditionFun>) {
+		this.conditions.addAll(conditions)
+	}
+
 
 }

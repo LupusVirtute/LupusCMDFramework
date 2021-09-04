@@ -8,14 +8,11 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.SimpleCommandMap
 import org.bukkit.help.GenericCommandHelpTopic
 import org.bukkit.plugin.java.JavaPlugin
-import org.lupus.commands.core.annotations.CMDPass
-import org.lupus.commands.core.annotations.Conditions
+import org.lupus.commands.core.annotations.general.Conditions
 import org.lupus.commands.core.arguments.ArgumentType
-import org.lupus.commands.core.arguments.types.PlayerType
 import org.lupus.commands.core.managers.ConditionManager
 import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.utils.ReflectionUtil.getPrivateField
-import org.lupus.commands.core.utils.StringUtil
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 
@@ -28,14 +25,15 @@ class CommandLupi(
 	val method: Method?,
 	val parameters: List<ArgumentType>,
 	val pluginRegistering: JavaPlugin,
+	val executor: ArgumentType?,
+	val conditions: MutableList<ConditionFun> = mutableListOf(),
 	permission: String = "",
-	val fullName: String = "",
+	var fullName: String = name,
 	val help: Boolean = false,
 	val async: Boolean = false,
-	val subCommand: Boolean = false,
+	val subCommand: Boolean = false
 ) : Command(name, description, syntax, aliases)
 {
-	val conditions: MutableList<ConditionFun> = mutableListOf()
 	init {
 		this.permission = permission
 		if(method != null) {
@@ -69,28 +67,6 @@ class CommandLupi(
 		return true
 	}
 
-	private fun parseSubCommands(sender: CommandSender, args: Array<out String>): Boolean {
-		if(args.isEmpty())
-			return false
-		var idx = 0
-		if (method?.isAnnotationPresent(CMDPass::class.java) == true) {
-			if (parameters.size <= args.size)
-				idx = parameters.size-1
-		}
-		val subArgument = args[idx]
-		if (help) {
-			if (parseHelp(sender, subArgument)) {
-				return true
-			}
-		}
-		for (subCommand in subCommands) {
-			if (subCommand.aliases.contains(subArgument) || subCommand.name == subArgument) {
-				dispatchCommandToSubCommand(sender, subArgument, args, subCommand)
-				return true
-			}
-		}
-		return false
-	}
 
 	private fun parseHelp(sender: CommandSender, subArgument: String): Boolean {
 		if (subArgument == "help") {
@@ -105,103 +81,59 @@ class CommandLupi(
 		return true
 	}
 
-	private fun dispatchCommandToSubCommand(sender: CommandSender, commandLabel: String, args: Array<out String>, subCommand: CommandLupi) {
-		val prefixIDX = if (parameters.size > 1) parameters.size else 1
-		var argumentArray: Array<String> = Array(args.size - prefixIDX) { "$it" }
-		if (prefixIDX <= args.size-1) {
-			System.arraycopy(args, prefixIDX, argumentArray, 0, args.size - prefixIDX)
-		}
-
-		var commandObj: Any? = null
-		val subCommandClazz = subCommand.method?.declaringClass
-		if (
-			method != null
-			&& method.isAnnotationPresent(CMDPass::class.java)
-			&& subCommandClazz != method.declaringClass
-			&& parameters.size < args.size
-		) {
-			if (subCommandClazz == null) {
-				sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
-				return
-			}
-			val parameterTypes = getParametersTypes()
-			parameterTypes.removeAt(0)
-			val constructor: Constructor<*>
-			try {
-				constructor = subCommandClazz.getConstructor(*parameterTypes.toTypedArray())
-			}
-			catch(ex: Exception) {
-				ex.printStackTrace()
-				sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
-				return
-			}
-			val parameters = getCommandParameters(sender, args) ?: return
-			parameters.removeAt(0)
-			commandObj = constructor.newInstance(*parameters.toTypedArray())
-
-		}
-		if (commandObj != null)
-			subCommand.runCommand(sender, getArgs(parameters.size-1, args), commandObj)
-		else
-			subCommand.execute(sender, commandLabel, argumentArray)
-	}
-
 	private fun runCommand(sender: CommandSender, args: Array<out String>) {
 		val clazz = method?.declaringClass
 		val obj = clazz?.getConstructor()?.newInstance()
 		runCommand(sender, args, obj)
 	}
 	private fun runCommand(sender: CommandSender, args: Array<out String>, obj: Any?) {
-		if (conditions.isNotEmpty()) {
-			for (condition in conditions) {
-				val output = condition.run(sender, args)
-				if (!output) {
-					sender.sendMessage(condition.getResponse(sender, args))
-					return
-				}
-			}
-		}
-		if (subCommands.isNotEmpty()) {
-			val result = parseSubCommands(sender, args)
-			if (result)
+		val subCMD = resolveSubCommand(sender, args)
+
+		val cmdParams = getCommandParameters(sender, args)
+		if (obj != null && method != null) {
+			if (cmdParams == null) {
+				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
 				return
-		}
-		if (method == null || obj == null) {
-			return
-		}
-		// Minus one because we take into account player
-		if (args.size < parameters.size-1) {
-			sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
-			return
-		}
-		val arguments = getCommandParameters(sender, args) ?: return
-
-		val argArray = Array<Any>(arguments.size) { it }
-		for ((i, argument) in arguments.withIndex()) {
-			argArray[i] = argument
+			}
+			val res = method.invoke(obj, *cmdParams.toTypedArray())
+			sendResponse(sender, res)
 		}
 
-		val response = method?.invoke(obj, *argArray) ?: return
-		sendResponse(sender, response)
+		if (subCMD != null) {
+			val parameterSize = cmdParams?.size
+
+			if (subCMD.method == null || parameterSize == null) {
+				sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
+				return
+			}
+			val clazz = subCMD.method.declaringClass
+			val types = getParametersTypes()
+			lateinit var constructor: Constructor<*>
+			try {
+				constructor = clazz.getDeclaredConstructor(*types.toTypedArray())
+			}
+			catch(ex: Exception) {
+				ex.printStackTrace()
+				sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
+				return
+			}
+			val inst = constructor.newInstance(*cmdParams.toTypedArray())
+			runCommand(sender, getArgs(parameterSize, args), inst)
+		}
 	}
 
 	private fun getCommandParameters(sender: CommandSender, args: Array<out String>): MutableList<Any>? {
-		var first = true
-		var iteration = 0
 		val arguments = mutableListOf<Any>()
-		for (parameter in parameters) {
-			if (first) {
-				if (!parameter.isTheArgumentOfThisType(sender::class.java)) {
-					sender.sendMessage(I18n[pluginRegistering, "not-for-type", "command", fullName, "syntax", syntax])
-					return null
-				}
-				first = false
-				arguments.add(sender)
-				continue
-			}
+		if(executor == null)
+			return null
+		if (!executor.isTheArgumentOfThisType(sender::class.java)) {
+			sender.sendMessage(I18n[pluginRegistering, "not-for-type", "command", fullName, "syntax", syntax])
+			return null
+		}
+		arguments.add(executor)
+		for ((iteration, parameter) in parameters.withIndex()) {
 			val endOffset = if (parameter.argumentSpan == -1) args.size else iteration+parameter.argumentSpan
 			val value = parameter.conversion(sender, *getArgs(iteration, endOffset, args))
-			iteration++
 			if (value == null) {
 				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
 				return null
@@ -233,60 +165,59 @@ class CommandLupi(
 
 
 	fun tabComplete(sender: CommandSender, args: List<String>): MutableList<String> {
-		val tabComplete = mutableListOf<String>()
-
-		if(subCommands.isNotEmpty()) {
-			if (parameters.size == args.size-1) {
-				val subList = mutableListOf<String>()
-				for (subCommand in subCommands) {
-					subList.add(subCommand.name)
-					subList.addAll(subCommand.aliases)
-				}
-
-				if(help)
-					subList.add("help")
-
-				when {
-					method == null -> return subList
-					method.isAnnotationPresent(CMDPass::class.java) -> return subList
-					else -> tabComplete.addAll(subList)
-				}
-			}
-			else if (parameters.size < args.size){
-				for (subCommand in subCommands) {
-					var prefixIDX = parameters.size
-					// We need to include atleast sub command argument span so we need minimal 1
-					// When we pass it to lower parts of tab execution
-					prefixIDX = if (prefixIDX <= 0) 1 else prefixIDX
-					val arg = args[0]
-					if (
-						subCommand.name.startsWith(arg)
-						|| StringUtil.listContainsStringStartingWith(subCommand.aliases, arg)
-					) {
-						return subCommand.tabComplete(sender, getArgs(prefixIDX, args.toTypedArray()).toList())
-					}
-				}
-			}
-
-		}
-		// Minus one because player is included in parameters
-		if(parameters.size-1 < args.size) {
-			tabComplete.addAll(PlayerType.autoComplete(sender, *args.toTypedArray()))
+		val tabComplete = suggestSubCommand(sender, args)
+		if (args.size > parameters.size || method == null)
 			return tabComplete
-		}
-		if (parameters.isEmpty()) {
-			return tabComplete
-		}
-		var lastIDX = args.size
-		val parameter = parameters[lastIDX]
-		// Last argument index
-		val argsLastIDX = args.size-1
-		val lastOne = args[argsLastIDX]
-		tabComplete.addAll(
-			parameter.autoComplete(sender, lastOne)
-		)
+		val paramIDX = args.size - 1
+		val parameter = parameters[paramIDX]
+		val autoComplete = parameter.autoComplete(sender, *args.toTypedArray())
+		tabComplete.addAll(autoComplete)
+
 		return tabComplete
 	}
+
+	fun resolveSubCommand(sender: CommandSender, args: Array<out String>): CommandLupi? {
+		val parameters = getParametersTypes()
+
+		val parSize = parameters.size
+		if (parSize < args.size)
+			return null
+
+		val commandArg = args[parSize]
+
+		for (subCommand in subCommands) {
+			if (testPermissionSilent(sender)) {
+				continue
+			}
+			val name = subCommand.name
+			if (name.lowercase() == commandArg.lowercase()) {
+				return subCommand
+			}
+		}
+		return null
+	}
+
+	fun suggestSubCommand(sender: CommandSender, args: List<String>): MutableList<String> {
+		val parameters = getCommandParameters(sender, *args.toTypedArray()) ?: return mutableListOf()
+
+		val parSize = parameters.size
+		if (parSize < args.size)
+			return mutableListOf()
+
+		val commandArg = args[parSize]
+		val commandList = mutableListOf<String>()
+		for (subCommand in subCommands) {
+			val name = subCommand.name
+			if (testPermissionSilent(sender)) {
+				continue
+			}
+			if (name.lowercase().startsWith(commandArg.lowercase())) {
+				commandList.add(name.lowercase())
+			}
+		}
+		return commandList
+	}
+
 
 	/**
 	 * Registers the command for given plugin
@@ -318,5 +249,9 @@ class CommandLupi(
 		val arguments = Array(endOffset-offset) { "$it" }
 		System.arraycopy(args, offset, arguments, 0, endOffset-offset)
 		return arguments
+	}
+
+	override fun toString(): String {
+		return "name:$fullName\ndesc:$description\nsyntax:$syntax\nmethod:${method?.name}\npermission:$permission"
 	}
 }
