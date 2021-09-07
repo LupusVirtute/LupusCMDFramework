@@ -1,5 +1,6 @@
 package org.lupus.commands.core.data
 
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.annotations.method.CMDPass
 import org.lupus.commands.core.annotations.parameters.ParamName
@@ -123,7 +124,13 @@ open class CommandBuilder(
 		if (executorParameter != null)
 			executor = ArgumentTypeList[executorParameter!!.type]
 		if (subCommands.isNotEmpty()) {
-			syntax.append(I18n[plugin, "sub-name"])
+			syntax.append(
+				LegacyComponentSerializer
+					.legacyAmpersand()
+					.serialize(
+						I18n[plugin, "sub-name"]
+					)
+			)
 		}
 
 		val builtCommand = CommandLupi(

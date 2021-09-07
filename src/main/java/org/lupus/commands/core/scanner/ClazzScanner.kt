@@ -1,7 +1,6 @@
 package org.lupus.commands.core.scanner
 
 import org.bukkit.plugin.java.JavaPlugin
-import org.lupus.commands.core.annotations.clazz.SubCommand
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.scanner.modifiers.*
 import org.lupus.commands.core.utils.LogUtil.outMsg

@@ -1,8 +1,10 @@
 package org.lupus.commands.core.data
 
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
@@ -36,7 +38,7 @@ class CommandLupi(
 {
 	init {
 		this.permission = permission
-		usage = "$fullName $syntax"
+		usage = "/$fullName $syntax"
 	}
 	var fullName: String = fullName
 		private set
@@ -44,10 +46,17 @@ class CommandLupi(
 	val tagRgx = "<([^>]*)>".toRegex()
 
 	override fun getDescription(): String {
-		return description.replace(tagRgx) {
-			val tagName = it.groups[1]?.value ?: return@replace it.value
-			I18n.get(pluginRegistering, tagName).toString()
-		}
+		return LegacyComponentSerializer
+			.legacyAmpersand()
+			.serialize( MiniMessage
+				.get()
+				.parse(
+					description.replace(tagRgx) {
+						val tagName = it.groups[1]?.value ?: return@replace it.value
+						I18n.getUnformatted(pluginRegistering, tagName)
+					}
+				)
+			)
 	}
 	override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
 		val permission = this.permission ?: ""
@@ -293,11 +302,14 @@ class CommandLupi(
 		return null
 	}
 
-
+	var registered = false
 	/**
 	 * Registers the command for given plugin
 	 */
 	fun registerCommand(plugin: JavaPlugin) {
+		if (registered)
+			return
+
 		try {
 			val result: Any = getPrivateField(
 				Bukkit.getServer().pluginManager,
@@ -308,6 +320,7 @@ class CommandLupi(
 			commandMap.register(super.getName(), plugin.name, this)
 			val helpTopic = GenericCommandHelpTopic(this)
 			Bukkit.getServer().helpMap.addTopic(helpTopic)
+			registered = true
 		} catch (e: Exception) {
 			e.printStackTrace()
 		}

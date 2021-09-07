@@ -124,7 +124,15 @@ class Scanner(
 		outMsg("[LCF] Started registering commands")
 		val timing = System.currentTimeMillis()
 		for (command in commands) {
-			MainCMDs[command.name.lowercase()] = command
+			val lowerCaseName = command.name.lowercase()
+			MainCMDs[lowerCaseName] = command
+			MainCMDs["${plugin.name}:$lowerCaseName"] = command
+			for (alias in command.aliases) {
+				val lowerAlias = alias.lowercase()
+				MainCMDs["${plugin.name}:$lowerAlias"] = command
+				MainCMDs[lowerAlias] = command
+			}
+
 			command.registerCommand(plugin)
 		}
 		val clazz: Class<out Server?> = Bukkit.getServer().javaClass
