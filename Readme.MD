@@ -28,6 +28,7 @@ class AdminCMD {
     }
 }
 ```
+That will create command /admin test  
 Yes, that's all you need to do, just write code.  
 The command above will just print out to player executor "hello world".  
 
@@ -47,9 +48,8 @@ Its just superior command name lets start with the same example i gave in the pr
 It's usually your method name nothing big
 
 # TODO
-There's a lot to do I want to do there's a list of implementation <br/>
+There's a lot to do I want to do here's a list of work I want to be done <br/>
 - [ ] Working I18n implementation for plugins to use
 - [ ] Command Life cycle events
-- [ ] Scanning and registering Life cycle events
 - [ ] Python script to show permission nodes for your code with tree graph or something
 - [ ] Test some edge cases

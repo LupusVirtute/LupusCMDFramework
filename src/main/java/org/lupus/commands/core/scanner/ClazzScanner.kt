@@ -5,6 +5,7 @@ import org.lupus.commands.core.annotations.clazz.SubCommand
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.scanner.modifiers.*
 import org.lupus.commands.core.utils.LogUtil.outMsg
+import java.util.logging.Level
 
 class ClazzScanner(
 		private val clazz: Class<*>,
@@ -18,7 +19,8 @@ class ClazzScanner(
 		private val permissionPrefix: String = ""
 ) {
     fun scan(sub: Boolean = false): CommandBuilder? {
-		if(clazz.isAnnotationPresent(SubCommand::class.java) && !sub) {
+		if (isClazzSubCommand(clazz) && !sub) {
+			outMsg("[LCF] Command was found to be sub command without being marked as such aborting", Level.SEVERE)
 			return null
 		}
 
@@ -35,9 +37,10 @@ class ClazzScanner(
 
 
 		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, clazz)
+		cmdBuilder.paramModifiers = paramModifiers
+		cmdBuilder.anyModifiers = anyModifiers
+
 		cmdBuilder.permission = permissionPrefix
-		modify(cmdBuilder, modifiers)
-		modify(cmdBuilder, anyModifiers);
 
 		for (method in clazz.declaredMethods) {
 			val scanner = MethodScanner(
@@ -54,6 +57,9 @@ class ClazzScanner(
 			cmdBuilder.subCommands.add(command)
 		}
 
+		modify(cmdBuilder, modifiers)
+		modify(cmdBuilder, anyModifiers)
+
 		outMsg("[LCF] Main Command Built!")
 		return cmdBuilder
     }
@@ -62,6 +68,17 @@ class ClazzScanner(
 		for (modifier in modifiers) {
 			val ann = clazz.getAnnotation(modifier.annotation) ?: continue
 			modifier.modify(cmdBuilder, ann, clazz as T)
+		}
+	}
+	companion object {
+		fun isClazzSubCommand(clazz: Class<*>): Boolean {
+			try{
+				clazz.getDeclaredConstructor()
+			}
+			catch (ex: Exception) {
+				return true
+			}
+			return false
 		}
 	}
 }

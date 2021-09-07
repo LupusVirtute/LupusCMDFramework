@@ -4,7 +4,6 @@ import io.papermc.lib.PaperLib
 import org.bukkit.Bukkit
 import org.bukkit.Server
 import org.bukkit.plugin.java.JavaPlugin
-import org.lupus.commands.core.annotations.clazz.SubCommand
 import org.lupus.commands.core.data.CommandLupi
 import org.lupus.commands.core.listeners.AsyncTabComplete
 import org.lupus.commands.core.listeners.SyncTabComplete
@@ -14,14 +13,6 @@ import org.lupus.commands.core.scanner.DefaultModifiers.anyMods
 import org.lupus.commands.core.scanner.DefaultModifiers.clazzMods
 import org.lupus.commands.core.scanner.DefaultModifiers.methodMods
 import org.lupus.commands.core.scanner.DefaultModifiers.paramModifiers
-import org.lupus.commands.core.scanner.modifiers.ClazzModifier
-import org.lupus.commands.core.scanner.modifiers.ParameterModifier
-import org.lupus.commands.core.scanner.modifiers.any.*
-import org.lupus.commands.core.scanner.modifiers.clazz.ContinuousMod
-import org.lupus.commands.core.scanner.modifiers.clazz.HelpMod
-import org.lupus.commands.core.scanner.modifiers.method.CMDPassMod
-import org.lupus.commands.core.scanner.modifiers.method.DefaultMod
-import org.lupus.commands.core.scanner.modifiers.method.NotCMDMod
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.scanners.TypeAnnotationsScanner
@@ -37,7 +28,7 @@ class Scanner(
 	companion object {
 		private var reg = false
 	}
-
+	var debug: Boolean = false
 
 	val pluginClazzLoader: ClassLoader = plugin::class.java.classLoader
 	private var packageName: String = ""
@@ -71,7 +62,7 @@ class Scanner(
 		)
 
 		outMsg("[LCF] Reflections scan ended")
-		outMsg("   Time elapsed = ${System.currentTimeMillis() - timing}ms")
+		outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
 
 		outMsg("[LCF] Performing scan for plugin ${clazz.simpleName}")
 
@@ -85,7 +76,7 @@ class Scanner(
 		outMsg("")
 		outMsg("")
 		outMsg("[LCF] Stopped scanning classes found ${res.size} applicable classes")
-		outMsg("   Time elapsed = ${System.currentTimeMillis() - timing}ms")
+		outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
 		outMsg("[LCF] Starting to scan classes...")
 
 		timing = System.currentTimeMillis()
@@ -99,8 +90,9 @@ class Scanner(
 				outMsg("[LCF] Command identified as subcommand aborting")
 				continue
 			}
-			if (secondClazz.isAnnotationPresent(SubCommand::class.java))
-				continue
+
+			if (ClazzScanner.isClazzSubCommand(secondClazz)) continue
+
 			val command = ClazzScanner(
 				secondClazz,
 				plugin,
@@ -123,7 +115,7 @@ class Scanner(
 		outMsg("")
 		outMsg("")
 		outMsg("[LCF] Stopped scanning classes successfully scanned all classes")
-		outMsg("   Time elapsed = ${System.currentTimeMillis() - timing}ms")
+		outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
 
 		registerCommands()
 	}
@@ -140,7 +132,7 @@ class Scanner(
 		m.invoke(Bukkit.getServer())
 
 		outMsg("[LCF] Stopped registering command successfully")
-		outMsg("    Time elapsed = ${System.currentTimeMillis() - timing}ms")
+		outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
 	}
 
 
@@ -149,6 +141,8 @@ class Scanner(
 		Bukkit.getLogger().log(level, string)
 	}
 	private fun outMsg(string: String) {
+		if (!debug)
+			return
 		outMsg(string, Level.INFO)
 	}
 

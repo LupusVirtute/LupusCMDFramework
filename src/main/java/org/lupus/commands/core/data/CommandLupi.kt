@@ -2,15 +2,14 @@ package org.lupus.commands.core.data
 
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.SimpleCommandMap
 import org.bukkit.help.GenericCommandHelpTopic
 import org.bukkit.plugin.java.JavaPlugin
-import org.lupus.commands.core.annotations.general.Conditions
 import org.lupus.commands.core.arguments.ArgumentType
-import org.lupus.commands.core.managers.ConditionManager
 import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.utils.ReflectionUtil.getPrivateField
 import java.lang.reflect.Constructor
@@ -29,16 +28,16 @@ class CommandLupi(
 	val executor: ArgumentType?,
 	val conditions: MutableList<ConditionFun> = mutableListOf(),
 	permission: String = "",
-	var fullName: String = name,
+	fullName: String = name,
 	val help: Boolean = false,
-	val async: Boolean = false,
-	val subCommand: Boolean = false
+	val async: Boolean = false
 ) : Command(name, description, syntax, aliases)
 {
 	init {
 		this.permission = permission
 	}
-
+	var fullName: String = fullName
+		private set
 	override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
 		val permission = this.permission ?: ""
 		if(!sender.isOp && permission != "" && !sender.hasPermission(permission)) {
@@ -58,10 +57,7 @@ class CommandLupi(
 	}
 
 
-	private fun parseHelp(sender: CommandSender, subArgument: String): Boolean {
-		if (subArgument == "help") {
-			return false
-		}
+	private fun parseHelp(sender: CommandSender): Boolean {
 		for (subCommand in subCommands) {
 			val command = subCommand.fullName
 			val syntax = subCommand.usage
@@ -73,7 +69,7 @@ class CommandLupi(
 
 	private fun runCommand(sender: CommandSender, args: Array<out String>) {
 		val clazz = declaringClazz
-		val obj = clazz?.getDeclaredConstructor()?.newInstance()
+		val obj = clazz.getDeclaredConstructor()?.newInstance()
 		if (obj == null) {
 			sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
 			return
@@ -88,9 +84,18 @@ class CommandLupi(
 			if (cmdParams == null) {
 				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
 				return
+
+			}
+			for (condition in conditions) {
+				val result = condition.run(sender, this, *cmdParams.toTypedArray())
+				if(!result) {
+					condition.getResponse(sender, this, *cmdParams.toTypedArray())
+					return
+				}
 			}
 			val res = method.invoke(obj, *cmdParams.toTypedArray())
-			sendResponse(sender, res)
+			if(res != null)
+				sendResponse(sender, res)
 		}
 
 		if (subCMD != null) {
@@ -138,9 +143,13 @@ class CommandLupi(
 		arguments.add(sender)
 		for ((iteration, parameter) in parameters.withIndex()) {
 			val endOffset = if (parameter.argumentSpan == -1) args.size else iteration+parameter.argumentSpan
-			val value = parameter.conversion(sender, *getArgs(iteration, endOffset, args))
+			var value: Any? =
+			try {
+				parameter.conversion(sender, *getArgs(iteration, endOffset, args))
+			} catch(ex: Exception) {
+				null
+			}
 			if (value == null) {
-				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
 				return null
 			}
 			arguments.add(
@@ -158,13 +167,27 @@ class CommandLupi(
 	}
 
 	private fun sendResponse(sender: CommandSender, res: Any) {
-		if (res is String)
+		if (res is String) {
 			sender.sendMessage(MiniMessage.get().parse(res))
+		}
 		if (res is TextComponent)
 			sender.sendMessage(res)
-		if (res is Array<*> && res.size >= 1)
-			if (res[0] is String)
-				sender.sendMessage(res as Array<out String>)
+		if (res is Array<*> && res.size >= 1) {
+			if (res[0] is String) {
+				val message = res[0] as String
+				val placeHolderInput = res.toMutableList()
+				placeHolderInput.removeFirst()
+				placeHolderInput.removeIf { it == null }
+				sender.sendMessage(
+					MiniMessage
+						.get()
+						.parse(
+							message,
+							*placeHolderInput.toTypedArray() as Array<out Any>
+						)
+				)
+			}
+		}
 
 	}
 
@@ -190,7 +213,16 @@ class CommandLupi(
 		if (args.size < parSize+1)
 			return null
 
+
 		val commandArg = args[parSize]
+		if (help) {
+			val commandName = I18n[pluginRegistering, "help-command-name"]
+			val plainTextCMD = PlainTextComponentSerializer.plainText().serialize(commandName)
+			if (commandArg == plainTextCMD) {
+				parseHelp(sender)
+				return null
+			}
+		}
 
 		for (subCommand in subCommands) {
 			if (!testPermissionSilent(sender)) {
@@ -283,6 +315,6 @@ class CommandLupi(
 	}
 
 	override fun toString(): String {
-		return "name:$fullName\ndesc:$description\nsyntax:$syntax\nmethod:${method?.name}\npermission:$permission"
+		return "\tname:$fullName,\n\tdesc:$description,\n\tsyntax:$syntax,\n\tmethod:${method?.name},\n\tpermission:$permission"
 	}
 }

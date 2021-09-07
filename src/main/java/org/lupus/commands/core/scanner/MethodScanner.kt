@@ -35,15 +35,12 @@ class MethodScanner(
 		var first = true
 		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, method.declaringClass)
 
+		cmdBuilder.anyModifiers = anyModifiers
+		cmdBuilder.paramModifiers = paramModifiers
+
 		cmdBuilder.method = method
 		cmdBuilder.permission = permissionPrefix
 		cmdBuilder.supCommand = supCommand
-
-
-		modify(cmdBuilder, anyModifiers)
-		modify(cmdBuilder, methodModifiers)
-
-		cmdBuilder.paramModifiers.addAll(paramModifiers)
 
 
 		for (commandArg in commandArgs) {
@@ -63,6 +60,12 @@ class MethodScanner(
 			}
 			cmdBuilder.addParameter(commandArg)
 		}
+
+		modify(cmdBuilder, anyModifiers)
+		modify(cmdBuilder, methodModifiers)
+
+
+
 
 		return cmdBuilder
     }

@@ -5,13 +5,14 @@ import org.lupus.commands.core.annotations.method.CMDPass
 import org.lupus.commands.core.annotations.ParamName
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
+import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.scanner.ClazzScanner
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 
-class CommandBuilder(
+open class CommandBuilder(
 	var plugin: JavaPlugin,
 	var name: String,
 	val packageName: String,
@@ -29,6 +30,7 @@ class CommandBuilder(
 	val parameters: MutableList<ArgumentType> = mutableListOf()
 	val subCommands: MutableList<CommandBuilder> = mutableListOf()
 
+
 	var help: Boolean = false
 	var async: Boolean = false
 	var continuous: Boolean = false
@@ -42,8 +44,8 @@ class CommandBuilder(
 			this.permission = getPerm()
 		}
 	var executorParameter: Parameter? = null
-	val paramModifiers: MutableList<ParameterModifier> = mutableListOf()
-	val anyModifiers: MutableList<AnyModifier> = mutableListOf()
+	var paramModifiers: List<ParameterModifier> = mutableListOf()
+	var anyModifiers: List<AnyModifier> = mutableListOf()
 	val conditions: MutableList<ConditionFun> = mutableListOf()
 
 	private fun getPerm(): String {
@@ -109,7 +111,10 @@ class CommandBuilder(
 		val subCommands = mutableListOf<CommandLupi>()
 		for (subCommand in this.subCommands) {
 			if (!continuous && !subCommand.continuous)
-				subCommand.fullName = """${this.fullName} ${this.syntax} ${subCommand.name}"""
+				subCommand.fullName =
+					"${this.fullName} ${this.syntax} ${subCommand.name}"
+						// Replace double space
+						.replace("  ", " ")
 			subCommands.addAll(subCommand.build())
 		}
 		if (continuous)
@@ -117,6 +122,10 @@ class CommandBuilder(
 		var executor: ArgumentType? = null
 		if (executorParameter != null)
 			executor = ArgumentTypeList[executorParameter!!.type]
+		if (subCommands.isNotEmpty()) {
+			syntax.append(I18n[plugin, "sub-name"])
+		}
+
 		val builtCommand = CommandLupi(
 			name,
 			description,
@@ -132,8 +141,7 @@ class CommandBuilder(
 			permission,
 			fullName,
 			help,
-			async,
-			supCommand != null
+			async
 		)
 		println(" ")
 		println(builtCommand.toString())

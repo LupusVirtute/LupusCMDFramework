@@ -62,27 +62,29 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 	}
 
 	operator fun get(plugin: JavaPlugin?, index: String, vararg objects: String): Component {
-		if (this[plugin] == null) {
-			return get(null, index, *objects)
-		}
-		val locale = locales[plugin]
-		if (this[plugin]!![locale] == null) {
-			return get(null, index, *objects)
-		}
-		if (this[plugin]!![locale] == null && plugin == null) {
-			return Component.text(index)
-		}
-		if (this[plugin]!![locale] == null) {
-			return get(plugin, index, *objects)
-		}
-		val mess = this[plugin]!![locale] ?: return get(null, index,*objects)
-
+		val mess = getUnformatted(plugin, index, *objects)
 		return MiniMessage
 			.get()
 			.parse(
-				mess.getProperty(index, index),
+				mess,
 				*objects
 			)
+	}
+	fun getUnformatted(plugin: JavaPlugin?, index: String, vararg objects: String): String {
+		if (this[plugin] == null) {
+			return getUnformatted(null, index, *objects)
+		}
+		val locale = locales[plugin]
+		if (this[plugin]!![locale] == null) {
+			return getUnformatted(null, index, *objects)
+		}
+		if (this[plugin]!![locale] == null && plugin == null) {
+			return index
+		}
+		if (this[plugin]!![locale] == null) {
+			return getUnformatted(plugin, index, *objects)
+		}
+		return this[plugin]!![locale]?.getProperty(index, index) ?: getUnformatted(null, index,*objects)
 	}
 
 }
