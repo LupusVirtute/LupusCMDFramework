@@ -2,6 +2,7 @@ package org.lupus.commands.core.data
 
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
@@ -35,9 +36,19 @@ class CommandLupi(
 {
 	init {
 		this.permission = permission
+		usage = "$fullName $syntax"
 	}
 	var fullName: String = fullName
 		private set
+
+	val tagRgx = "<([^>]*)>".toRegex()
+
+	override fun getDescription(): String {
+		return description.replace(tagRgx) {
+			val tagName = it.groups[1]?.value ?: return@replace it.value
+			I18n.get(pluginRegistering, tagName).toString()
+		}
+	}
 	override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
 		val permission = this.permission ?: ""
 		if(!sender.isOp && permission != "" && !sender.hasPermission(permission)) {
@@ -60,7 +71,7 @@ class CommandLupi(
 	private fun parseHelp(sender: CommandSender): Boolean {
 		for (subCommand in subCommands) {
 			val command = subCommand.fullName
-			val syntax = subCommand.usage
+			val syntax = subCommand.syntax
 			val desc = subCommand.description
 			sender.sendMessage(I18n[pluginRegistering, "help-syntax", "command", command, "syntax", syntax, "desc", desc])
 		}
@@ -214,7 +225,7 @@ class CommandLupi(
 			return null
 
 
-		val commandArg = args[parSize]
+		val commandArg = args[parSize].lowercase()
 		if (help) {
 			val commandName = I18n[pluginRegistering, "help-command-name"]
 			val plainTextCMD = PlainTextComponentSerializer.plainText().serialize(commandName)
@@ -229,7 +240,7 @@ class CommandLupi(
 				continue
 			}
 			val name = subCommand.name
-			if (name.lowercase() == commandArg.lowercase()) {
+			if (name.lowercase() == commandArg) {
 				return subCommand
 			}
 		}
@@ -245,6 +256,15 @@ class CommandLupi(
 
 		val commandArg = args[parSize]
 		val commandList = mutableListOf<String>()
+
+		if (help) {
+			val commandName = I18n[pluginRegistering, "help-command-name"]
+			val plainTextCMD = PlainTextComponentSerializer.plainText().serialize(commandName)
+			if (plainTextCMD.startsWith(commandArg)) {
+				commandList.add(plainTextCMD)
+			}
+		}
+
 		for (subCommand in subCommands) {
 			val name = subCommand.name
 			if (!testPermissionSilent(sender)) {

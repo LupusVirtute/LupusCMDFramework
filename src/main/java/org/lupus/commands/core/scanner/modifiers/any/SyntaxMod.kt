@@ -1,6 +1,6 @@
 package org.lupus.commands.core.scanner.modifiers.any
 
-import org.lupus.commands.core.annotations.Syntax
+import org.lupus.commands.core.annotations.method.Syntax
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
 

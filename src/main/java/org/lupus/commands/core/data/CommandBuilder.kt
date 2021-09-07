@@ -2,7 +2,7 @@ package org.lupus.commands.core.data
 
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.annotations.method.CMDPass
-import org.lupus.commands.core.annotations.ParamName
+import org.lupus.commands.core.annotations.parameters.ParamName
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.messages.I18n
