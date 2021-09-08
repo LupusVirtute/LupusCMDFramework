@@ -1,5 +1,5 @@
 # Modern Kotlin Spigot Command Framework  
-Were you always like why i have to code a lot of repeatable things?  
+Were you always like why I have to code a lot of repeatable things?  
 No more, I represent to you LupusCommandFramework!  
 
 Framework that will care about developers and will be powered by developers.  
@@ -46,6 +46,12 @@ For example you have command in `org.lupus.commands.admin.badcmds.KickCMD` all o
 Its just superior command name lets start with the same example i gave in the previous line so we ended up with `pluginName.admin.badcmds.` now you just add class name for this example we used KickCMD so it's `pluginName.admin.badcmds.kick`
 ## Your command name
 It's usually your method name nothing big
+
+# If you want to say thank you
+You can donate any amount you want if you don't want it's okay I will still maintain this code base!
+
+[![Paypal donation](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.com/donate?hosted_button_id=BX6X8ZSQ93UWL)
+
 
 # TODO
 There's a lot to do I want to do here's a list of work I want to be done <br/>
