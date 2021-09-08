@@ -32,7 +32,7 @@ open class CommandBuilder(
 
 	val parameters: MutableList<ArgumentType> = mutableListOf()
 	val subCommands: MutableList<CommandBuilder> = mutableListOf()
-
+	var namingSchema: Regex = Regex("Command|CMD")
 
 	var help: Boolean = false
 	var async: Boolean = false
@@ -61,7 +61,7 @@ open class CommandBuilder(
 			perm = "$supCommandPrefix$methodName"
 			return perm
 		}
-		val clazzPrefix = declaringClazz.name.removePrefix("$packageName.")
+		val clazzPrefix = declaringClazz.name.removePrefix("$packageName.").replace(namingSchema, "")
 		if (perm == "") {
 			perm = plugin.name
 		}

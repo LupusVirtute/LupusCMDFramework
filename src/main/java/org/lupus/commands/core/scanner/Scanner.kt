@@ -83,13 +83,6 @@ class Scanner(
 		for (re in res) {
 			outMsg("[LCF] Scanning $re")
 			val secondClazz = clazz.classLoader.loadClass(re)
-			try{
-				secondClazz.getDeclaredConstructor()
-			}
-			catch (ex: Exception) {
-				outMsg("[LCF] Command identified as subcommand aborting")
-				continue
-			}
 
 			if (ClazzScanner.isClazzSubCommand(secondClazz)) continue
 

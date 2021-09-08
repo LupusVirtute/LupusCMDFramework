@@ -56,6 +56,7 @@ class ClazzScanner(
 				permissionPrefix
 			)
 			val command = scanner.scan() ?: continue
+			command.namingSchema = namingSchema
 			cmdBuilder.subCommands.add(command)
 		}
 
