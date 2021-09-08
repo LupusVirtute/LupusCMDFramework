@@ -23,6 +23,11 @@ open class CommandBuilder(
 ) {
 	private val pluginClazzLoader: ClassLoader = plugin::class.java.classLoader
 	var noCMD: Boolean = false
+	var namingSchema: Regex = Regex("Command|CMD")
+		set(value) {
+			permission = getPerm()
+			field = value
+		}
     var permission = getPerm()
 	private var fullName = name
 	var description: String = ""
@@ -32,7 +37,6 @@ open class CommandBuilder(
 
 	val parameters: MutableList<ArgumentType> = mutableListOf()
 	val subCommands: MutableList<CommandBuilder> = mutableListOf()
-	var namingSchema: Regex = Regex("Command|CMD")
 
 	var help: Boolean = false
 	var async: Boolean = false
@@ -92,7 +96,7 @@ open class CommandBuilder(
 			?: throw IllegalArgumentException("clazz argument isn't ArgumentType")
 
 		// It would be weird if this would be null whilst we're adding parameters
-		if (!method?.isAnnotationPresent(Syntax::class.java)!!) {
+		if (method?.isAnnotationPresent(Syntax::class.java)!!) {
 			return this
 		}
 

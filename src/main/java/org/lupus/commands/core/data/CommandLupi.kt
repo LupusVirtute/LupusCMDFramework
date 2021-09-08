@@ -81,7 +81,7 @@ class CommandLupi(
 		for (subCommand in subCommands) {
 			val command = subCommand.fullName
 			val syntax = subCommand.syntax
-			val desc = subCommand.description
+			val desc = subCommand.getDescription()
 			sender.sendMessage(I18n[pluginRegistering, "help-syntax", "command", command, "syntax", syntax, "desc", desc])
 		}
 		return true
