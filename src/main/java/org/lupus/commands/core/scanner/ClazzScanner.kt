@@ -41,6 +41,9 @@ class ClazzScanner(
 
 		cmdBuilder.permission = permissionPrefix
 
+		modify(cmdBuilder, modifiers)
+		modify(cmdBuilder, anyModifiers)
+
 		for (method in clazz.declaredMethods) {
 			val scanner = MethodScanner(
 				method,
@@ -55,9 +58,6 @@ class ClazzScanner(
 			val command = scanner.scan() ?: continue
 			cmdBuilder.subCommands.add(command)
 		}
-
-		modify(cmdBuilder, modifiers)
-		modify(cmdBuilder, anyModifiers)
 
 		outMsg("[LCF] Main Command Built!")
 		return cmdBuilder

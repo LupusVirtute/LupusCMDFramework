@@ -39,7 +39,7 @@ class MethodScanner(
 		cmdBuilder.paramModifiers = paramModifiers
 
 		cmdBuilder.method = method
-		cmdBuilder.permission = permissionPrefix
+		cmdBuilder.permission = supCommand.permission
 		cmdBuilder.supCommand = supCommand
 
 

@@ -2,7 +2,9 @@ package org.lupus.commands.core.data
 
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.bukkit.plugin.java.JavaPlugin
+import org.lupus.commands.core.annotations.general.NoPerm
 import org.lupus.commands.core.annotations.method.CMDPass
+import org.lupus.commands.core.annotations.method.Syntax
 import org.lupus.commands.core.annotations.parameters.ParamName
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
@@ -89,6 +91,10 @@ open class CommandBuilder(
 		val argumentType = ArgumentTypeList[clazz]
 			?: throw IllegalArgumentException("clazz argument isn't ArgumentType")
 
+		// It would be weird if this would be null whilst we're adding parameters
+		if (!method?.isAnnotationPresent(Syntax::class.java)!!) {
+			return this
+		}
 
 		if (argumentType.argumentSpan > 1) {
 			val argumentNames = argumentType.argumentName.split(',')
