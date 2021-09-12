@@ -170,7 +170,7 @@ open class CommandBuilder(
 
     fun addPass(pass: String) {
 		val subCommand = getCommandPass(method) ?: return
-		val cmd = ClazzScanner(subCommand, plugin, packageName).scan(true) ?: return
+		val cmd = ClazzScanner(plugin, packageName).scan(subCommand,true) ?: return
 		cmd.supCommand = this
     	this.subCommands.add(cmd)
 	}

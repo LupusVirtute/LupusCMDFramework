@@ -7,7 +7,6 @@ import org.lupus.commands.core.utils.LogUtil.outMsg
 import java.util.logging.Level
 
 class ClazzScanner(
-		private val clazz: Class<*>,
 		private val plugin: JavaPlugin,
 		private val packageName: String,
 		private val modifiers: List<ClazzModifier> = DefaultModifiers.clazzMods,
@@ -17,7 +16,7 @@ class ClazzScanner(
 		private val namingSchema: Regex = Regex("Command|CMD"),
 		private val permissionPrefix: String = ""
 ) {
-    fun scan(sub: Boolean = false): CommandBuilder? {
+    fun scan(clazz: Class<*>, sub: Boolean = false): CommandBuilder? {
 		if (isClazzSubCommand(clazz) && !sub) {
 			outMsg("[LCF] Command was found to be sub command without being marked as such aborting", Level.SEVERE)
 			return null
@@ -41,10 +40,11 @@ class ClazzScanner(
 
 		cmdBuilder.permission = permissionPrefix
 
-		modify(cmdBuilder, modifiers)
-		modify(cmdBuilder, anyModifiers)
+		modify(clazz, cmdBuilder, modifiers)
+		modify(clazz, cmdBuilder, anyModifiers)
 
 		for (method in clazz.declaredMethods) {
+
 			val scanner = MethodScanner(
 				method,
 				plugin,
@@ -55,6 +55,7 @@ class ClazzScanner(
 				paramModifiers,
 				permissionPrefix
 			)
+
 			val command = scanner.scan() ?: continue
 			command.namingSchema = namingSchema
 			cmdBuilder.subCommands.add(command)
@@ -64,7 +65,7 @@ class ClazzScanner(
 		return cmdBuilder
     }
 
-	fun <T> modify(cmdBuilder: CommandBuilder, modifiers: List<BaseModifier<T>>) {
+	fun <T> modify(clazz: Class<*>, cmdBuilder: CommandBuilder, modifiers: List<BaseModifier<T>>) {
 		for (modifier in modifiers) {
 			val ann = clazz.getAnnotation(modifier.annotation) ?: continue
 			modifier.modify(cmdBuilder, ann, clazz as T)
