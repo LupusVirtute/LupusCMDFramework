@@ -4,6 +4,8 @@ import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.annotations.general.NoPerm
 import org.lupus.commands.core.annotations.general.Perm
+import org.lupus.commands.core.annotations.method.Default
+import org.lupus.commands.core.annotations.method.NotCMD
 import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
@@ -26,13 +28,13 @@ class MethodScanner(
 ) {
 
     fun scan(): CommandBuilder? {
+		if(method.isAnnotationPresent(NotCMD::class.java))
+			return null
 		if(method.parameterCount == 0) {
 			outMsg("[LCF] INFO: Command method ${method.name} was found to not have executor parameter at least aborting..")
 			return null
 		}
 		val commandName = method.name
-		val commandArgs = method.parameters
-		var first = true
 		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, method.declaringClass)
 
 		cmdBuilder.anyModifiers = anyModifiers
@@ -41,30 +43,12 @@ class MethodScanner(
 		cmdBuilder.method = method
 		cmdBuilder.permission = supCommand.permission
 		cmdBuilder.supCommand = supCommand
-
-
-		for (commandArg in commandArgs) {
-			if (!ArgumentTypeList.contains(commandArg.type)) {
-				outMsg("[LCF] ERROR: Command argument isn't defined in ArgumentTypeList did you load your command arguments before scanning class?", Level.SEVERE)
-				outMsg("If not use @NotCMD", Level.SEVERE)
-				return null
-			}
-			if (first) {
-				first = !first
-				if (!CommandSender::class.java.isAssignableFrom(commandArg.type)) {
-					outMsg("[LCF] First argument of method ${method.name} is not Bukkit CommandSender aborting")
-					return null
-				}
-				cmdBuilder.executorParameter = commandArg
-				continue
-			}
-			cmdBuilder.addParameter(commandArg)
+		if (cmdBuilder.method == null) {
+			return null
 		}
 
 		modify(cmdBuilder, anyModifiers)
 		modify(cmdBuilder, methodModifiers)
-
-
 
 
 		return cmdBuilder

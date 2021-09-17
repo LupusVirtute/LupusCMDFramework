@@ -1,6 +1,7 @@
 package org.lupus.commands.core.scanner
 
 import org.bukkit.plugin.java.JavaPlugin
+import org.lupus.commands.core.annotations.method.Default
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.scanner.modifiers.*
 import org.lupus.commands.core.utils.LogUtil.outMsg
@@ -23,6 +24,8 @@ class ClazzScanner(
 		}
 
 		val simpleName = clazz.simpleName
+		if (simpleName == "Companion")
+			return null
 		val commandName = simpleName.split(namingSchema)[0].lowercase()
 
 		if(!sub)
@@ -58,6 +61,10 @@ class ClazzScanner(
 
 			val command = scanner.scan() ?: continue
 			command.namingSchema = namingSchema
+			if(command.method!!.isAnnotationPresent(Default::class.java)) {
+				cmdBuilder.method = command.method
+				continue
+			}
 			cmdBuilder.subCommands.add(command)
 		}
 

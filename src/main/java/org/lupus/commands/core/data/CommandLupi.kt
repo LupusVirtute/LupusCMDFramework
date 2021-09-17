@@ -59,11 +59,6 @@ class CommandLupi(
 			)
 	}
 	override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
-		val permission = this.permission ?: ""
-		if(!sender.isOp && permission != "" && !sender.hasPermission(permission)) {
-			sender.sendMessage(I18n[pluginRegistering, "no-perm", "permission", permission ?: ""])
-			return true
-		}
 		if (!async)
 			runCommand(sender, args)
 		else {
@@ -97,6 +92,11 @@ class CommandLupi(
 		runCommand(sender, args, obj)
 	}
 	private fun runCommand(sender: CommandSender, args: Array<out String>, obj: Any) {
+		val permission = this.permission ?: ""
+		if(!sender.isOp && permission != "" && !sender.hasPermission(permission)) {
+			sender.sendMessage(I18n[pluginRegistering, "no-perm", "permission", permission ?: ""])
+			return
+		}
 		val subCMD = resolveSubCommand(sender, args)
 
 		val cmdParams = getCommandParameters(sender, args)

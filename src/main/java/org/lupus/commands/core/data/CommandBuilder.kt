@@ -1,6 +1,7 @@
 package org.lupus.commands.core.data
 
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.annotations.general.NoPerm
 import org.lupus.commands.core.annotations.method.CMDPass
@@ -10,10 +11,13 @@ import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.scanner.ClazzScanner
+import org.lupus.commands.core.scanner.MethodScanner
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
+import org.lupus.commands.core.utils.LogUtil
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
+import java.util.logging.Level
 
 open class CommandBuilder(
 	var plugin: JavaPlugin,
@@ -32,6 +36,34 @@ open class CommandBuilder(
 	private var fullName = name
 	var description: String = ""
 	var method: Method? = null
+		set(value) {
+			if (value == null)
+				return
+			var first = true
+			field = value
+			for (parameter in value.parameters) {
+				if (!ArgumentTypeList.contains(parameter.type)) {
+					LogUtil.outMsg("[LCF] ERROR: ${value.name} Command argument isn't defined in ArgumentTypeList did you load your command arguments before scanning class?",
+						Level.SEVERE)
+					LogUtil.outMsg("If not use @NotCMD", Level.SEVERE)
+					field = null
+					return
+				}
+				if (first) {
+					first = !first
+					if (!CommandSender::class.java.isAssignableFrom(parameter.type)) {
+						LogUtil.outMsg("[LCF] First argument of method ${value.name} is not Bukkit CommandSender aborting")
+						field = null
+						return
+					}
+					this.executorParameter = parameter
+					continue
+				}
+				this.addParameter(parameter)
+			}
+			if(supCommand == null)
+				permission = getPerm()
+		}
 	val aliases: MutableList<String> = mutableListOf()
 	var syntax = StringBuilder()
 
@@ -56,6 +88,9 @@ open class CommandBuilder(
 	val conditions: MutableList<ConditionFun> = mutableListOf()
 
 	private fun getPerm(): String {
+		if(method != null)
+			if (declaringClazz.isAnnotationPresent(NoPerm::class.java)||method!!.isAnnotationPresent(NoPerm::class.java))
+				return ""
 		var perm = ""
 		val supCommandPrefix = supCommand?.permission ?: ""
 		// It's sure to be the last

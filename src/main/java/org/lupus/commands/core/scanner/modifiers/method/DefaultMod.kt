@@ -11,6 +11,5 @@ object DefaultMod : MethodModifier(Default::class.java) {
             throw IllegalStateException("Command Builder doesn't have the superior command")
         }
 
-        cmdBuilder.supCommand!!.method = objModified
     }
 }

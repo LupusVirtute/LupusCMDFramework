@@ -84,6 +84,9 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		if (this[plugin]!![locale] == null) {
 			return getUnformatted(plugin, index, *objects)
 		}
+		if (this[plugin]!![locale]!![index] == null && plugin == null) {
+			return index
+		}
 		if (this[plugin]!![locale]!![index] == null) {
 			return getUnformatted(null, index, *objects)
 		}
