@@ -6,6 +6,7 @@ import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import org.reflections.Reflections
 import org.reflections.scanners.ResourcesScanner
+import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.*
@@ -38,6 +39,7 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		val refl =
 			Reflections("$dir/",ResourcesScanner())
 		val resources = refl.getResources(Pattern.compile("[^.]*.properties"))
+
 		for (resource in resources) {
 			val locale = resource.split(Regex("messages-"))[1].split(".properties")[0]
 			var resStream: InputStream?
@@ -45,17 +47,34 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 				resStream = this::class.java.getResourceAsStream(resource)
 			else
 				resStream = plugin.getResource(resource)
+			addStream(plugin, resStream, resource, locale)
+		}
+		if (plugin == null)
+			return
+		val folder = File(plugin.dataFolder,dir)
+		if (!folder.exists() || !folder.isDirectory) {
+			return
+		}
+		val fileList = folder.listFiles() ?: return
 
-			if (resStream == null) {
-
-				Bukkit.getLogger().log(Level.SEVERE, "[LCF] Severe problem with identyfing resource stream for I18n")
-				Bukkit.getLogger().log(Level.SEVERE, " File: $resource")
+		for (listFile in fileList) {
+			if (listFile.isDirectory) {
 				continue
 			}
-			val properties = Properties()
-			properties.load(InputStreamReader(resStream,"utf8"))
-			this[plugin]!![locale] = properties
+			val locale = listFile.name.split(Regex("messages-"))[1].split(".properties")[0]
+			val stream = listFile.inputStream()
+			addStream(plugin, stream, listFile.name, locale)
 		}
+	}
+	fun addStream(plugin: JavaPlugin?, resStream: InputStream?, file: String, locale: String) {
+		if (resStream == null) {
+			Bukkit.getLogger().log(Level.SEVERE, "[LCF] Severe problem with identyfing resource stream for I18n")
+			Bukkit.getLogger().log(Level.SEVERE, " File: $file")
+			return
+		}
+		val properties = Properties()
+		properties.load(InputStreamReader(resStream,"utf8"))
+		this[plugin]!![locale] = properties
 	}
 	fun setLocale(plug: JavaPlugin, locale: String) {
 		locales[plug] = locale
