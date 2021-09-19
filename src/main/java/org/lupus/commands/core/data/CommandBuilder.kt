@@ -95,18 +95,18 @@ open class CommandBuilder(
 		val supCommandPrefix = supCommand?.permission ?: ""
 		// It's sure to be the last
 		var methodName = method?.name ?: ""
-		methodName = if(methodName != "") ".$methodName" else ""
-		if (supCommandPrefix != "") {
+		methodName = if(methodName.isNotEmpty()) ".$methodName" else ""
+		if (supCommandPrefix.isNotEmpty()) {
 			perm = "$supCommandPrefix$methodName"
 			return perm
 		}
 		val clazzPrefix = declaringClazz.name.removePrefix("$packageName.").replace(namingSchema, "")
-		if (perm == "") {
+		if (perm.isEmpty()) {
 			perm = plugin.name
 		}
-		if (perm != ""){
-			perm += ".$clazzPrefix"
-		}
+
+		perm += ".$clazzPrefix"
+
 		if (method != null) {
 			perm += ".${method!!.name}"
 		}
