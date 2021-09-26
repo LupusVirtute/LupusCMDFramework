@@ -200,7 +200,7 @@ class Scanner(
 			val m = clazz.getDeclaredMethod("syncCommands")
 			m.invoke(Bukkit.getServer())
 
-			outMsg("[LCF] Stopped registering command successfully")
+			outMsg("[LCF] Stopped registering commands successfully")
 			outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
 		}
 	}

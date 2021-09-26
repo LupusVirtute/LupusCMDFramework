@@ -28,8 +28,6 @@ class MethodScanner(
 ) {
 
     fun scan(): CommandBuilder? {
-		if(method.isAnnotationPresent(NotCMD::class.java))
-			return null
 		if(method.parameterCount == 0) {
 			outMsg("[LCF] INFO: Command method ${method.name} was found to not have executor parameter at least aborting..")
 			return null
@@ -49,7 +47,8 @@ class MethodScanner(
 
 		modify(cmdBuilder, anyModifiers)
 		modify(cmdBuilder, methodModifiers)
-
+		if(cmdBuilder.noCMD)
+			return null
 
 		return cmdBuilder
     }

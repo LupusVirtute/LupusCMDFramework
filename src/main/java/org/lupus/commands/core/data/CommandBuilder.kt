@@ -15,6 +15,7 @@ import org.lupus.commands.core.scanner.MethodScanner
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
 import org.lupus.commands.core.utils.LogUtil
+import org.lupus.commands.core.utils.LogUtil.outMsg
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 import java.util.logging.Level
@@ -35,6 +36,7 @@ open class CommandBuilder(
     var permission = getPerm()
 	private var fullName = name
 	var description: String = ""
+
 	var method: Method? = null
 		set(value) {
 			if (value == null)
@@ -61,9 +63,9 @@ open class CommandBuilder(
 				}
 				this.addParameter(parameter)
 			}
-			if(supCommand == null)
-				permission = getPerm()
+			permission = getPerm()
 		}
+
 	val aliases: MutableList<String> = mutableListOf()
 	var syntax = StringBuilder()
 
@@ -107,7 +109,7 @@ open class CommandBuilder(
 
 		perm += ".$clazzPrefix"
 
-		if (method != null) {
+		if (method != null && supCommand != null) {
 			perm += ".${method!!.name}"
 		}
 
@@ -195,9 +197,9 @@ open class CommandBuilder(
 			help,
 			async
 		)
-		println(" ")
-		println(builtCommand.toString())
-		println(" ")
+		outMsg(" ")
+		outMsg(builtCommand.toString())
+		outMsg(" ")
 		return listOf(
 			builtCommand
 		)

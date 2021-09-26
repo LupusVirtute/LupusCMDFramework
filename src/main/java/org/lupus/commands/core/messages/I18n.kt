@@ -31,7 +31,13 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		locales[null] = "en"
 	}
 	fun init(plugin: JavaPlugin) {
+		if(this[plugin] != null)
+			throw Exception("Plugin already initialized")
+
 		this[plugin] = hashMapOf()
+		loadResourcesInDir("locales", plugin)
+	}
+	fun resetPlugin(plugin: JavaPlugin) {
 		loadResourcesInDir("locales", plugin)
 	}
 
