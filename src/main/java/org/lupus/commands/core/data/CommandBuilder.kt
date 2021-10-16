@@ -11,10 +11,8 @@ import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.scanner.ClazzScanner
-import org.lupus.commands.core.scanner.MethodScanner
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
-import org.lupus.commands.core.utils.LogUtil
 import org.lupus.commands.core.utils.LogUtil.outMsg
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
@@ -30,12 +28,13 @@ open class CommandBuilder(
 	var noCMD: Boolean = false
 	var namingSchema: Regex = Regex("Command|CMD")
 		set(value) {
-			permission = getPerm()
 			field = value
+			permission = getPerm()
 		}
     var permission = getPerm()
-	private var fullName = name
 	var description: String = ""
+	val flags: MutableSet<CommandFlag> = hashSetOf()
+
 
 	var method: Method? = null
 		set(value) {
@@ -45,16 +44,16 @@ open class CommandBuilder(
 			field = value
 			for (parameter in value.parameters) {
 				if (!ArgumentTypeList.contains(parameter.type)) {
-					LogUtil.outMsg("[LCF] ERROR: ${value.name} Command argument isn't defined in ArgumentTypeList did you load your command arguments before scanning class?",
+					outMsg("[LCF] ERROR: ${value.name} Command argument isn't defined in ArgumentTypeList did you load your command arguments before scanning class?",
 						Level.SEVERE)
-					LogUtil.outMsg("If not use @NotCMD", Level.SEVERE)
+					outMsg("If not use @NotCMD", Level.SEVERE)
 					field = null
 					return
 				}
 				if (first) {
 					first = !first
 					if (!CommandSender::class.java.isAssignableFrom(parameter.type)) {
-						LogUtil.outMsg("[LCF] First argument of method ${value.name} is not Bukkit CommandSender aborting")
+						outMsg("[LCF] First argument of method ${value.name} is not Bukkit CommandSender aborting")
 						field = null
 						return
 					}
@@ -72,9 +71,7 @@ open class CommandBuilder(
 	val parameters: MutableList<ArgumentType> = mutableListOf()
 	val subCommands: MutableList<CommandBuilder> = mutableListOf()
 
-	var help: Boolean = false
-	var async: Boolean = false
-	var continuous: Boolean = false
+
 
 
 	var supCommand: CommandBuilder? = null
@@ -83,37 +80,49 @@ open class CommandBuilder(
 				return
 			field = it
 			this.permission = getPerm()
+			if (it.hasFlag(CommandFlag.NO_PERM))
+				this.flags.add(CommandFlag.NO_PERM)
 		}
 	var executorParameter: Parameter? = null
 	var paramModifiers: List<ParameterModifier> = mutableListOf()
 	var anyModifiers: List<AnyModifier> = mutableListOf()
 	val conditions: MutableList<ConditionFun> = mutableListOf()
 
+	private fun hasFlag(flag: CommandFlag): Boolean {
+		return flags.contains(flag)
+	}
 	private fun getPerm(): String {
 		if(method != null)
-			if (declaringClazz.isAnnotationPresent(NoPerm::class.java)||method!!.isAnnotationPresent(NoPerm::class.java))
+			if (hasFlag(CommandFlag.NO_PERM))
 				return ""
-		var perm = ""
+		var perm = plugin.name.lowercase()
 		val supCommandPrefix = supCommand?.permission ?: ""
 		// It's sure to be the last
-		var methodName = method?.name ?: ""
-		methodName = if(methodName.isNotEmpty()) ".$methodName" else ""
+		val methodName = getPermMethodPart()
+
 		if (supCommandPrefix.isNotEmpty()) {
 			perm = "$supCommandPrefix$methodName"
-			return perm
+			return perm.lowercase()
 		}
-		val clazzPrefix = declaringClazz.name.removePrefix("$packageName.").replace(namingSchema, "")
-		if (perm.isEmpty()) {
-			perm = plugin.name
-		}
+		val clazzPrefix = getPermClazzPrefixPart()
+		perm += clazzPrefix
 
-		perm += ".$clazzPrefix"
+		return perm.lowercase()
+	}
+	private fun getPermClazzPrefixPart(): String {
+		val clazzPrefix = declaringClazz
+			.name
+			.removePrefix("$packageName.")
+			.replace(namingSchema, "")
 
-		if (method != null && supCommand != null) {
-			perm += ".${method!!.name}"
-		}
-
-		return perm
+		return ".${clazzPrefix}"
+	}
+	private fun getPermMethodPart(): String {
+		if (method == null)
+			return ""
+		var methodName = method?.name ?: ""
+		methodName = if(methodName.isNotEmpty()) ".$methodName" else ""
+		return methodName
 	}
 
 	fun addParameter(parameter: Parameter): CommandBuilder {
@@ -130,7 +139,7 @@ open class CommandBuilder(
 		}
 
 		val argumentType = ArgumentTypeList[clazz]
-			?: throw IllegalArgumentException("clazz argument isn't ArgumentType")
+			?: throw IllegalArgumentException("clazz argument isn't in ArgumentTypes list")
 
 		// It would be weird if this would be null whilst we're adding parameters
 		if (method?.isAnnotationPresent(Syntax::class.java)!!) {
@@ -154,18 +163,21 @@ open class CommandBuilder(
 		return this
 	}
 
-	fun build(): List<CommandLupi> {
-
+	fun build(previousNameSpace: String = ""): List<CommandLupi> {
+		var previousNameSpace = previousNameSpace
+		if (previousNameSpace.isEmpty())
+			previousNameSpace = "/$name"
 		val subCommands = mutableListOf<CommandLupi>()
 		for (subCommand in this.subCommands) {
-			if (!continuous && !subCommand.continuous)
-				subCommand.fullName =
-					"${this.fullName} ${this.syntax} ${subCommand.name}"
-						// Replace double space
+			var nameSpace = previousNameSpace
+			if (!hasFlag(CommandFlag.CONTINUOUS) && !subCommand.hasFlag(CommandFlag.CONTINUOUS))
+				nameSpace +=
+					"${this.syntax} ${subCommand.name} "
+						// Replace double space if any exists
 						.replace("  ", " ")
-			subCommands.addAll(subCommand.build())
+			subCommands.addAll(subCommand.build(nameSpace))
 		}
-		if (continuous)
+		if (hasFlag(CommandFlag.CONTINUOUS))
 			return subCommands
 		var executor: ArgumentType? = null
 		if (executorParameter != null)
@@ -193,9 +205,8 @@ open class CommandBuilder(
 			executor,
 			conditions,
 			permission,
-			fullName,
-			help,
-			async
+			previousNameSpace,
+			flags
 		)
 		outMsg(" ")
 		outMsg(builtCommand.toString())
@@ -205,7 +216,7 @@ open class CommandBuilder(
 		)
 	}
 
-    fun addPass(pass: String) {
+    fun addSubCommandPass(pass: String) {
 		val subCommand = getCommandPass(method) ?: return
 		val cmd = ClazzScanner(plugin, packageName).scan(subCommand,true) ?: return
 		cmd.supCommand = this

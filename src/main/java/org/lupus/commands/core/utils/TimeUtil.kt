@@ -6,19 +6,40 @@ object TimeUtil {
     val numberRegex = "[0-9]*".toRegex()
     val timeRegex = "([0-9]*mo)|([0-9]*d)|([0-9]*h)|([0-9]*m)|([0-9]*s)".toRegex()
     fun stringTimeToInstant(input: String): Instant {
+        return Instant.now().plusSeconds(stringTimeToSeconds(input))
+    }
+    fun stringTimeToSeconds(input: String): Long {
         val values = timeRegex.findAll(input)
-        var instant = Instant.now()
+        var seconds = 0L
         for (value in values) {
             val output = value.value
             for (timeClassifier in timeClassifiers) {
                 val classifierOutput = classifyAndCheck(timeClassifier, output)
                 if (classifierOutput != 0L) {
-                    instant = instant.plusSeconds(classifierOutput)
+                    seconds += classifierOutput
                     continue
                 }
             }
         }
-        return instant
+        return seconds
+    }
+
+    /**
+     * Gets time
+     */
+    fun epochSecondToString(input: Instant): String {
+        var epochSecond =  input.epochSecond - Instant.now().epochSecond
+        val builder = StringBuilder()
+        for (timeClassifier in timeClassifiers) {
+            var calcRest = epochSecond
+            calcRest /= timeClassifier.numberValue
+            if (calcRest <= 0)
+                continue
+            val output = timeClassifier.parse(calcRest)
+            epochSecond -= calcRest*timeClassifier.numberValue
+            builder.append(output).append(' ')
+        }
+        return builder.toString()
     }
     private fun classifyAndCheck(classifier: TimeClassifier, input: String): Long {
         if (!classifier.classifies(input)) return 0
@@ -44,6 +65,10 @@ object TimeUtil {
         fun parse(input: String): Long {
             val output = numberRegex.find(input)!!.value.toLong()
             return output * numberValue
+        }
+        fun parse(input: Long): String {
+
+            return "$input$identifier".replace("$","")
         }
         fun classifies(input: String): Boolean {
             return input.contains(identifier.toRegex())

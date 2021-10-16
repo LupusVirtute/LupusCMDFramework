@@ -3,16 +3,18 @@ package org.lupus.commands.core.data
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.minimessage.MiniMessage
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
+import org.bukkit.NamespacedKey
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.SimpleCommandMap
+import org.bukkit.entity.Player
 import org.bukkit.help.GenericCommandHelpTopic
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.arguments.ArgumentType
+import org.lupus.commands.core.managers.CooldownManager
 import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.utils.ReflectionUtil.getPrivateField
 import java.lang.reflect.Constructor
@@ -32,8 +34,8 @@ class CommandLupi(
 	val conditions: MutableList<ConditionFun> = mutableListOf(),
 	permission: String = "",
 	fullName: String = name,
-	val help: Boolean = false,
-	val async: Boolean = false
+	val flags: Set<CommandFlag>
+
 ) : Command(name, description, syntax, aliases)
 {
 	init {
@@ -59,7 +61,7 @@ class CommandLupi(
 			)
 	}
 	override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
-		if (!async)
+		if (!hasFlag(CommandFlag.ASYNC))
 			runCommand(sender, args)
 		else {
 			Bukkit
@@ -71,7 +73,9 @@ class CommandLupi(
 		return true
 	}
 
-
+	private fun hasFlag(flag: CommandFlag): Boolean {
+		return flags.contains(flag)
+	}
 	private fun parseHelp(sender: CommandSender): Boolean {
 		for (subCommand in subCommands) {
 			val command = subCommand.fullName
@@ -92,8 +96,7 @@ class CommandLupi(
 		runCommand(sender, args, obj)
 	}
 	private fun runCommand(sender: CommandSender, args: Array<out String>, obj: Any) {
-		val permission = this.permission ?: ""
-		if(!sender.isOp && permission != "" && !sender.hasPermission(permission)) {
+		if(!sender.isOp && !this.testPermissionSilent(sender)) {
 			sender.sendMessage(I18n[pluginRegistering, "no-perm", "permission", permission ?: ""])
 			return
 		}
@@ -109,7 +112,11 @@ class CommandLupi(
 			for (condition in conditions) {
 				val result = condition.run(sender, this, *cmdParams.toTypedArray())
 				if(!result) {
-					condition.getResponse(sender, this, *cmdParams.toTypedArray())
+					when (val response = condition.getResponse(sender, this, *cmdParams.toTypedArray())) {
+						is Component -> sender.sendMessage(response)
+						is String -> sender.sendMessage(response)
+						else -> sender.sendMessage(response.toString())
+					}
 					return
 				}
 			}
@@ -163,15 +170,12 @@ class CommandLupi(
 		arguments.add(sender)
 		for ((iteration, parameter) in parameters.withIndex()) {
 			val endOffset = if (parameter.argumentSpan == -1) args.size else iteration+parameter.argumentSpan
-			var value: Any? =
-			try {
-				parameter.conversion(sender, *getArgs(iteration, endOffset, args))
-			} catch(ex: Exception) {
-				null
-			}
-			if (value == null) {
-				return null
-			}
+			var value: Any =
+				try {
+					parameter.conversion(sender, *getArgs(iteration, endOffset, args))
+				} catch(ex: Exception) {
+					null
+				} ?: return null
 			arguments.add(
 				value
 			)
@@ -235,7 +239,7 @@ class CommandLupi(
 
 
 		val commandArg = args[parSize].lowercase()
-		if (help) {
+		if (hasFlag(CommandFlag.HELP)) {
 			val commandName = I18n[pluginRegistering, "help-command-name"]
 			val plainTextCMD = PlainTextComponentSerializer.plainText().serialize(commandName)
 			if (commandArg == plainTextCMD) {
@@ -266,7 +270,7 @@ class CommandLupi(
 		val commandArg = args[parSize]
 		val commandList = mutableListOf<String>()
 
-		if (help) {
+		if (hasFlag(CommandFlag.HELP)) {
 			val commandName = I18n[pluginRegistering, "help-command-name"]
 			val plainTextCMD = PlainTextComponentSerializer.plainText().serialize(commandName)
 			if (plainTextCMD.startsWith(commandArg)) {
@@ -345,6 +349,10 @@ class CommandLupi(
 		val arguments = Array<Any>(endOffset-offset) { "$it" }
 		System.arraycopy(args, offset, arguments, 0, endOffset-offset)
 		return arguments
+	}
+	fun getNameSpace(): NamespacedKey {
+		val name = this.fullName.lowercase().replace(' ', '_')
+		return NamespacedKey(this.pluginRegistering, name)
 	}
 
 	override fun toString(): String {

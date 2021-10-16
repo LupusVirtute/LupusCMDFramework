@@ -5,10 +5,10 @@ import org.bukkit.command.CommandSender
 /**
  * The condition class you need to inherit it to start coding your own conditions
  */
-abstract class ConditionFun() {
+abstract class ConditionFun {
 
 	// The response player receives if condition failed
-	open fun getResponse(sender: CommandSender, commandLupi: CommandLupi, args: Array<Any>): String {
+	open fun getResponse(sender: CommandSender, commandLupi: CommandLupi, args: Array<Any>): Any {
 		return ""
 	}
 

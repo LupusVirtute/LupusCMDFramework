@@ -41,7 +41,7 @@ class ClazzScanner(
 		cmdBuilder.paramModifiers = paramModifiers
 		cmdBuilder.anyModifiers = anyModifiers
 
-		cmdBuilder.permission = permissionPrefix
+		cmdBuilder.permission = permissionPrefix + cmdBuilder.permission
 
 		modify(clazz, cmdBuilder, modifiers)
 		modify(clazz, cmdBuilder, anyModifiers)

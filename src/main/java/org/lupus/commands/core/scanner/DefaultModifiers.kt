@@ -11,6 +11,16 @@ import org.lupus.commands.core.scanner.modifiers.method.NotCMDMod
 object DefaultModifiers {
     val clazzMods = mutableListOf(ContinuousMod, HelpMod)
     val methodMods = mutableListOf(CMDPassMod, DefaultMod, NotCMDMod, DefaultMod)
-    val anyMods = mutableListOf(AliasesMod, AsyncMod, ConditionsMod, DescMod, NoPermModifier, SyntaxMod, PermModifier)
+    val anyMods = mutableListOf(
+        AliasesMod,
+        AsyncMod,
+        ConditionsMod,
+        CooldownMod,
+        CMDNameMod,
+        DescMod,
+        PermModifier,
+        NoPermModifier,
+        SyntaxMod,
+    )
     val paramModifiers = mutableListOf<ParameterModifier>()
 }

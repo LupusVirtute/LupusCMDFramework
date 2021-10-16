@@ -16,7 +16,7 @@ object CreativeCond : ConditionFun() {
 		return sender.gameMode == GameMode.CREATIVE
 	}
 
-	override fun getResponse(sender: CommandSender, commandLupi: CommandLupi, args: Array<Any>): String {
-		return I18n.getUnformatted(commandLupi.pluginRegistering, "creative-cond-response")
+	override fun getResponse(sender: CommandSender, commandLupi: CommandLupi, args: Array<Any>): Any {
+		return I18n[commandLupi.pluginRegistering, "creative-cond-response"]
 	}
 }

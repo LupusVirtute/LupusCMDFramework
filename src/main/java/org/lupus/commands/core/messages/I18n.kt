@@ -2,6 +2,7 @@ package org.lupus.commands.core.messages
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import org.reflections.Reflections
@@ -115,7 +116,11 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		if (this[plugin]!![locale]!![index] == null) {
 			return getUnformatted(null, index, *objects)
 		}
-		return this[plugin]!![locale]?.getProperty(index, index) ?: getUnformatted(null, index,*objects)
+		val output = this[plugin]!![locale]?.getProperty(index, index) ?: getUnformatted(null, index,*objects)
+		return output
+	}
+	fun parseInput(plugin: JavaPlugin?, input: String, vararg objects: String): String {
+		return LegacyComponentSerializer.legacySection().serialize(MiniMessage.get().parse(getUnformatted(plugin, input), *objects))
 	}
 
 }

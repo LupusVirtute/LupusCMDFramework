@@ -8,4 +8,17 @@ object StringUtil {
 		}
 		return false
 	}
+
+	/**
+	 * Case insensitive filter used for tab complete actions
+	 */
+	fun filterStringArrayInputStartingWithFilter(input: List<String>, filter: String): MutableList<String> {
+		val filteredOutput = mutableListOf<String>()
+		val betterFilter = filter.lowercase()
+		for (s in input) {
+			if (s.lowercase().startsWith(betterFilter))
+				filteredOutput.add(s)
+		}
+		return filteredOutput
+	}
 }
