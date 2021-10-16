@@ -149,8 +149,8 @@ open class CommandBuilder(
 		if (argumentType.argumentSpan > 1) {
 			val argumentNames = argumentType.argumentName.split(',')
 
-			for (i in 0..argumentType.argumentSpan) {
-				this.parameters.add(argumentType)
+			this.parameters.add(argumentType)
+			for (i in 0 until argumentType.argumentSpan) {
 				syntax.append("[${parameterName}.${argumentNames[i]}] ")
 			}
 

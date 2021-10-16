@@ -168,11 +168,13 @@ class CommandLupi(
 			return null
 		}
 		arguments.add(sender)
-		for ((iteration, parameter) in parameters.withIndex()) {
-			val endOffset = if (parameter.argumentSpan == -1) args.size else iteration+parameter.argumentSpan
+		var argumentSpanCounter = 0
+		for (parameter in parameters) {
+			argumentSpanCounter += if (parameter.argumentSpan == -1) 1 else parameter.argumentSpan
+			val endOffset = if (parameter.argumentSpan == -1) args.size else argumentSpanCounter
 			var value: Any =
 				try {
-					parameter.conversion(sender, *getArgs(iteration, endOffset, args))
+					parameter.conversion(sender, *getArgs(argumentSpanCounter-parameter.argumentSpan, endOffset, args))
 				} catch(ex: Exception) {
 					null
 				} ?: return null

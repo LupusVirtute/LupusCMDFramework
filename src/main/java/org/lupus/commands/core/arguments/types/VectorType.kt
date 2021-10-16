@@ -10,10 +10,13 @@ object VectorType : ArgumentType(Vector::class.java, 3, "x,y,z") {
 	override fun conversion(sender: CommandSender, vararg input: String): Any {
 		if (sender is Player) {
 			val loc = sender.location
-			val array = arrayOf(loc.x.toString() + "", loc.y.toString() + "", loc.z.toString() + "")
-			System.arraycopy(array, 0, input, 0, 3)
+			val array = arrayOf("%.2f".format(loc.x) + "", "%.2f".format(loc.y), "%.2f".format(loc.z))
+			for ((i, _) in array.withIndex()) {
+				if (input[i] == "~")
+					System.arraycopy(array, i, input, i, 1)
+			}
 		}
-		return Vector(input[0].toInt(), input[1].toInt(), input[2].toInt())
+		return Vector(input[0].toDouble(), input[1].toDouble(), input[2].toDouble())
 	}
 
 	override fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String> {

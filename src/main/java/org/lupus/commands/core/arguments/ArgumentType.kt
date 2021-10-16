@@ -6,6 +6,6 @@ abstract class ArgumentType @JvmOverloads constructor(val clazz: Class<out Any>,
 	abstract fun conversion(sender: CommandSender, vararg input: String): Any?
 	abstract fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String>
 	fun isTheArgumentOfThisType(clazz: Class<out Any>): Boolean {
-		return this.clazz!!.isAssignableFrom(clazz)
+		return this.clazz.isAssignableFrom(clazz)
 	}
 }
