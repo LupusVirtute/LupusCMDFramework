@@ -225,11 +225,39 @@ class CommandLupi(
 		val paramIDX = args.size - 1
 		if(paramIDX < 0)
 			return tabComplete
-		val parameter = parameters[paramIDX]
-		val autoComplete = parameter.autoComplete(sender, *args.toTypedArray())
+
+		val parameter = getParameter(args) ?: return tabComplete
+
+		val autoComplete = parameter.autoComplete(sender, *getArgumentsDependingOnArgumentSpan(args))
 		tabComplete.addAll(autoComplete)
 
 		return tabComplete
+	}
+	fun getParameter(args: List<String>): ArgumentType? {
+		var argSize = args.size
+		for (parameter in parameters) {
+			val argumentSpan = parameter.argumentSpan
+			val alpha = if (argumentSpan == -1) 1 else argSize-argumentSpan
+			if (alpha <= 0)
+				return parameter
+			argSize -= argumentSpan
+		}
+		return null
+	}
+
+	fun getArgumentsDependingOnArgumentSpan(args: Collection<String>): Array<String> {
+		val argSize = args.size
+		var alpha = 0
+		for (parameter in parameters) {
+			val argumentSpan = parameter.argumentSpan
+			alpha += if (argumentSpan == -1) 1 else argumentSpan
+			if (alpha >= argSize) {
+				return args
+					.toTypedArray()
+					.copyOfRange(alpha-argumentSpan, argSize)
+			}
+		}
+		return arrayOf()
 	}
 
 	fun resolveSubCommand(sender: CommandSender, args: Array<out String>): CommandLupi? {

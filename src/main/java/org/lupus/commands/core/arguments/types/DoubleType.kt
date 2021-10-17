@@ -10,6 +10,15 @@ object DoubleType : ArgumentType(Double::class.java) {
 	}
 
 	override fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String> {
-		return mutableListOf("1.23", "2.42")
+		val number = input[0].toDoubleOrNull() ?: return IntegerType.numbers.toMutableList()
+
+		val output = mutableListOf<String>()
+		if(!input[0].contains(".")) {
+			output.add("$number.")
+		}
+		for(i in 0..9) {
+			output.add("${input[0]}$i")
+		}
+		return output
 	}
 }
