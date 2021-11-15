@@ -19,6 +19,7 @@ import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.utils.ReflectionUtil.getPrivateField
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
+import kotlin.math.abs
 
 class CommandLupi(
 	name: String,
@@ -170,11 +171,16 @@ class CommandLupi(
 		arguments.add(sender)
 		var argumentSpanCounter = 0
 		for (parameter in parameters) {
-			argumentSpanCounter += if (parameter.argumentSpan == -1) 1 else parameter.argumentSpan
-			val endOffset = if (parameter.argumentSpan == -1) args.size else argumentSpanCounter
-			var value: Any =
+			var argumentSpan = parameter.argumentSpan
+
+			argumentSpanCounter += if (argumentSpan == -1) 1 else parameter.argumentSpan
+			val endOffset = if (argumentSpan == -1) args.size else argumentSpanCounter
+			// -1 is infinite, so we need to just take the last possible element
+			argumentSpan = abs(argumentSpan)
+
+			val value: Any =
 				try {
-					parameter.conversion(sender, *getArgs(argumentSpanCounter-parameter.argumentSpan, endOffset, args))
+					parameter.conversion(sender, *getArgs(argumentSpanCounter-argumentSpan, endOffset, args))
 				} catch(ex: Exception) {
 					null
 				} ?: return null
