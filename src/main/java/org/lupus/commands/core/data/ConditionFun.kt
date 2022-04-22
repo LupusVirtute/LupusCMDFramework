@@ -1,6 +1,7 @@
 package org.lupus.commands.core.data
 
 import org.bukkit.command.CommandSender
+import org.lupus.commands.core.scanner.ClazzScanner
 
 /**
  * The condition class you need to inherit it to start coding your own conditions

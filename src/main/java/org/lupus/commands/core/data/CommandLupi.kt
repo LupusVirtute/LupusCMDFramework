@@ -1,7 +1,5 @@
 package org.lupus.commands.core.data
 
-import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
@@ -10,16 +8,21 @@ import org.bukkit.NamespacedKey
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.SimpleCommandMap
-import org.bukkit.entity.Player
 import org.bukkit.help.GenericCommandHelpTopic
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.arguments.ArgumentType
-import org.lupus.commands.core.managers.CooldownManager
+import org.lupus.commands.core.components.command.prerun.*
+import org.lupus.commands.core.components.command.response.ArrayResponseComponent
+import org.lupus.commands.core.components.command.response.StringResponseComponent
+import org.lupus.commands.core.components.command.response.TextCompResponse
 import org.lupus.commands.core.messages.I18n
+import org.lupus.commands.core.messages.I18nMessage
+import org.lupus.commands.core.messages.KeyValueBinder
+import org.lupus.commands.core.utils.CommandUtil
 import org.lupus.commands.core.utils.ReflectionUtil.getPrivateField
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
-import kotlin.math.abs
+import java.lang.reflect.Parameter
 
 class CommandLupi(
 	name: String,
@@ -35,7 +38,8 @@ class CommandLupi(
 	val conditions: MutableList<ConditionFun> = mutableListOf(),
 	permission: String = "",
 	fullName: String = name,
-	val flags: Set<CommandFlag>
+	val flags: Set<CommandFlag>,
+	val optionals: HashMap<Int, Array<String>>
 
 ) : Command(name, description, syntax, aliases)
 {
@@ -48,12 +52,27 @@ class CommandLupi(
 
 	val tagRgx = "<([^>]*)>".toRegex()
 
+	val SOMETHING_WRONG = I18nMessage(pluginRegistering, "something-wrong")
+
+	val preRunComponents = mutableListOf(
+		PreRunPermissionCheck::class.java.getDeclaredConstructor(CommandLupi::class.java),
+		PreRunConditionCheck::class.java.getDeclaredConstructor(CommandLupi::class.java),
+		PreRunGetCommandParams::class.java.getDeclaredConstructor(CommandLupi::class.java),
+		PreRunPickSubCommand::class.java.getDeclaredConstructor(CommandLupi::class.java)
+	)
+
+	val responseComponents = mutableListOf(
+		ArrayResponseComponent::class.java.getDeclaredConstructor(CommandLupi::class.java),
+		StringResponseComponent::class.java.getDeclaredConstructor(CommandLupi::class.java),
+		TextCompResponse::class.java.getDeclaredConstructor(CommandLupi::class.java)
+	)
+
 	override fun getDescription(): String {
 		return LegacyComponentSerializer
 			.legacyAmpersand()
 			.serialize( MiniMessage
-				.get()
-				.parse(
+				.miniMessage()
+				.deserialize(
 					description.replace(tagRgx) {
 						val tagName = it.groups[1]?.value ?: return@replace it.value
 						I18n.getUnformatted(pluginRegistering, tagName)
@@ -74,123 +93,108 @@ class CommandLupi(
 		return true
 	}
 
-	private fun hasFlag(flag: CommandFlag): Boolean {
+	fun hasFlag(flag: CommandFlag): Boolean {
 		return flags.contains(flag)
-	}
-	private fun parseHelp(sender: CommandSender): Boolean {
-		for (subCommand in subCommands) {
-			val command = subCommand.fullName
-			val syntax = subCommand.syntax
-			val desc = subCommand.getDescription()
-			sender.sendMessage(I18n[pluginRegistering, "help-syntax", "command", command, "syntax", syntax, "desc", desc])
-		}
-		return true
 	}
 
 	private fun runCommand(sender: CommandSender, args: Array<out String>) {
 		val clazz = declaringClazz
 		val obj = clazz.getDeclaredConstructor()?.newInstance()
 		if (obj == null) {
-			sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
+			SOMETHING_WRONG.send(sender)
 			return
 		}
+
 		runCommand(sender, args, obj)
 	}
 	private fun runCommand(sender: CommandSender, args: Array<out String>, obj: Any) {
-		if(!sender.isOp && !this.testPermissionSilent(sender)) {
-			sender.sendMessage(I18n[pluginRegistering, "no-perm", "permission", permission ?: ""])
-			return
-		}
-		val subCMD = resolveSubCommand(sender, args)
+		var subCMD: CommandLupi? = null
+		var cmdParams: MutableList<Any>? = null
 
-		val cmdParams = getCommandParameters(sender, args)
+		for(componentConstructor in preRunComponents) {
+			val constructed = componentConstructor
+				.newInstance(this)
+
+			constructed.run(sender, args, obj)
+
+			if(constructed.subCommand != null)
+				subCMD = constructed.subCommand
+			if(constructed.cmdParams != null)
+				cmdParams = constructed.cmdParams
+
+			if (constructed.isAborted())
+				return
+		}
+
+		val fullNameCommand = KeyValueBinder("command", fullName)
+		val syntax = KeyValueBinder("syntax", syntax)
+
+		val badArg = I18nMessage(pluginRegistering, "bad-arg", fullNameCommand, syntax)
+
 		if (method != null && subCMD == null) {
 			if (cmdParams == null) {
-				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
+				badArg.send(sender)
 				return
+			}
 
-			}
-			for (condition in conditions) {
-				val result = condition.run(sender, this, *cmdParams.toTypedArray())
-				if(!result) {
-					when (val response = condition.getResponse(sender, this, *cmdParams.toTypedArray())) {
-						is Component -> sender.sendMessage(response)
-						is String -> sender.sendMessage(response)
-						else -> sender.sendMessage(response.toString())
-					}
-					return
-				}
-			}
 			val res = method.invoke(obj, *cmdParams.toTypedArray())
 			if(res != null)
 				sendResponse(sender, res)
 		}
 
-		if (subCMD != null) {
-			val parameterSize = cmdParams?.size ?: 0
-			if(parameterSize-1 == args.size) {
-				sender.sendMessage(I18n[pluginRegistering, "bad-arg", "command", fullName, "syntax", syntax])
-				return
-			}
-			val clazz = subCMD.declaringClazz
-			val types = getParametersTypes()
-			var inst: Any = obj
-			if(cmdParams == null && declaringClazz == clazz) {
-				subCMD.runCommand(sender, getArgs(parameterSize+1, args), inst)
-			}
-			else if(cmdParams != null) {
-				lateinit var constructor: Constructor<*>
-				try {
-					constructor = clazz.getDeclaredConstructor(*types.toTypedArray())
-				}
-				catch(ex: Exception) {
-					ex.printStackTrace()
-					sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
-					return
-				}
-				inst = constructor.newInstance(*getCMDsArgs(1,*cmdParams.toTypedArray()))
-				subCMD.runCommand(sender, getArgs(parameterSize, args), inst)
-			}
-			else {
-				// It shouldn't technically go here!
-				sender.sendMessage(I18n[pluginRegistering, "something-wrong"])
-			}
+		if (subCMD == null) {
+			return
 		}
 
+		val parameterSize = cmdParams?.size ?: 0
 
+		if(parameterSize-1 == args.size) {
+			badArg.send(sender)
+			return
+		}
+
+		val clazz = subCMD.declaringClazz
+		val types = getParametersTypes()
+
+		val inst: Any = obj
+
+		if(cmdParams == null && declaringClazz == clazz) {
+			subCMD.runCommand(sender, getArgs(parameterSize+1, args), inst)
+		}
+		else if(cmdParams != null) {
+			val constructed = getInstanceOfClazz(clazz, types, cmdParams) ?: return
+
+			subCMD.runCommand(sender, getArgs(parameterSize, args), constructed)
+		}
+		else {
+			// It shouldn't technically go here!
+			SOMETHING_WRONG.send(sender)
+		}
 	}
 
-	private fun getCommandParameters(sender: CommandSender, args: Array<out String>): MutableList<Any>? {
-		val arguments = mutableListOf<Any>()
-		if(executor == null)
-			return null
-		if (!executor.isTheArgumentOfThisType(sender::class.java)) {
-			sender.sendMessage(I18n[pluginRegistering, "not-for-type", "command", fullName, "syntax", syntax])
-			return null
-		}
-		arguments.add(sender)
-		var argumentSpanCounter = 0
-		for (parameter in parameters) {
-			var argumentSpan = parameter.argumentSpan
+	// Given the following input:
+	// subCommand1 args1 args2 subCommand2 args1 args2 subCommand3 args1 args2
+	// subCommands offset is dependent on the number of args in the subCommand
+	private fun getInstanceOfClazz(clazz: Class<*>, types: MutableList<out Class<*>>, cmdParams: MutableList<Any>): Any? {
+		// Remove first type that is the player
+		// Player type is useless to us because it should be parsed anyway
+		// To the method because it needs to be first argument
+		types.removeFirst()
+		cmdParams.removeFirst()
 
-			argumentSpanCounter += if (argumentSpan == -1) 1 else parameter.argumentSpan
-			val endOffset = if (argumentSpan == -1) args.size else argumentSpanCounter
-			// -1 is infinite, so we need to just take the last possible element
-			argumentSpan = abs(argumentSpan)
-
-			val value: Any =
-				try {
-					parameter.conversion(sender, *getArgs(argumentSpanCounter-argumentSpan, endOffset, args))
-				} catch(ex: Exception) {
-					null
-				} ?: return null
-			arguments.add(
-				value
-			)
+		val constructor: Constructor<*> =
+		try {
+			clazz.getDeclaredConstructor(*types.toTypedArray())
 		}
-		return arguments
+		catch(ex: Exception) {
+			ex.printStackTrace()
+			return null
+		} ?: return null
+
+		return constructor.newInstance(*getCMDsArgs(1, cmdParams.toTypedArray()))
 	}
-	private fun getParametersTypes(): MutableList<out Class<*>> {
+
+	fun getParametersTypes(): MutableList<out Class<*>> {
 		val args = mutableListOf<Class<*>>()
 		for (parameter in parameters) {
 			args.add(parameter.clazz)
@@ -199,26 +203,13 @@ class CommandLupi(
 	}
 
 	private fun sendResponse(sender: CommandSender, res: Any) {
-		if (res is String) {
-			sender.sendMessage(MiniMessage.get().parse(res))
-		}
-		if (res is TextComponent)
-			sender.sendMessage(res)
-		if (res is Array<*> && res.size >= 1) {
-			if (res[0] is String) {
-				val message = res[0] as String
-				val placeHolderInput = res.toMutableList()
-				placeHolderInput.removeFirst()
-				placeHolderInput.removeIf { it == null }
-				sender.sendMessage(
-					MiniMessage
-						.get()
-						.parse(
-							message,
-							*placeHolderInput.toTypedArray() as Array<out Any>
-						)
-				)
-			}
+		for (constructor in responseComponents) {
+			val constructed = constructor.newInstance(this)
+			if(!constructed.compare(res))
+				continue
+			val message = constructed.run(res)
+			sender.sendMessage(message)
+			break
 		}
 
 	}
@@ -226,8 +217,12 @@ class CommandLupi(
 
 	fun tabComplete(sender: CommandSender, args: List<String>): MutableList<String> {
 		val tabComplete = suggestSubCommand(sender, args)
+		// If method is null then it's a sup command
+		// Should be then tab completed from the suggested sub command tab complete
 		if (args.size > parameters.size || method == null)
 			return tabComplete
+
+		// Parameter index is the last index of the arguments
 		val paramIDX = args.size - 1
 		if(paramIDX < 0)
 			return tabComplete
@@ -264,36 +259,6 @@ class CommandLupi(
 			}
 		}
 		return arrayOf()
-	}
-
-	fun resolveSubCommand(sender: CommandSender, args: Array<out String>): CommandLupi? {
-		val parameters = getParametersTypes()
-
-		val parSize = parameters.size
-		if (args.size < parSize+1)
-			return null
-
-
-		val commandArg = args[parSize].lowercase()
-		if (hasFlag(CommandFlag.HELP)) {
-			val commandName = I18n[pluginRegistering, "help-command-name"]
-			val plainTextCMD = PlainTextComponentSerializer.plainText().serialize(commandName)
-			if (commandArg == plainTextCMD) {
-				parseHelp(sender)
-				return null
-			}
-		}
-
-		for (subCommand in subCommands) {
-			if (!testPermissionSilent(sender)) {
-				continue
-			}
-			val name = subCommand.name
-			if (name.lowercase() == commandArg) {
-				return subCommand
-			}
-		}
-		return null
 	}
 
 	fun suggestSubCommand(sender: CommandSender, args: List<String>): MutableList<String> {
@@ -335,7 +300,7 @@ class CommandLupi(
 		sender: CommandSender
 	): MutableList<String>? {
 		if (parSize < args.size) {
-			val subCommand = resolveSubCommand(sender, *args.toTypedArray()) ?: return null
+			val subCommand = CommandUtil.resolveSubCommand(sender, this, args.toTypedArray()) ?: return null
 			val offset = parSize+1
 			return subCommand.tabComplete(sender, getArgs(offset, args.toTypedArray()).toList())
 		}
@@ -387,7 +352,7 @@ class CommandLupi(
 		return arguments
 	}
 	fun getNameSpace(): NamespacedKey {
-		val name = this.fullName.lowercase().replace(' ', '_')
+		val name = this.permission ?: this.fullName.replace(' ', '_')
 		return NamespacedKey(this.pluginRegistering, name)
 	}
 

@@ -1,11 +1,11 @@
 package org.lupus.commands.core.scanner
 
+import org.apache.logging.log4j.Level
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.annotations.method.Default
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.scanner.modifiers.*
 import org.lupus.commands.core.utils.LogUtil.outMsg
-import java.util.logging.Level
 
 class ClazzScanner(
 		private val plugin: JavaPlugin,
@@ -19,7 +19,7 @@ class ClazzScanner(
 ) {
     fun scan(clazz: Class<*>, sub: Boolean = false): CommandBuilder? {
 		if (isClazzSubCommand(clazz) && !sub) {
-			outMsg("[LCF] Command was found to be sub command without being marked as such aborting", Level.SEVERE)
+			outMsg("[LCF] Command was found to be sub command without being marked as such aborting", Level.FATAL)
 			return null
 		}
 
@@ -80,7 +80,7 @@ class ClazzScanner(
 	}
 	companion object {
 		fun isClazzSubCommand(clazz: Class<*>): Boolean {
-			try{
+			try {
 				clazz.getDeclaredConstructor()
 			}
 			catch (ex: Exception) {

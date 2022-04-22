@@ -8,6 +8,7 @@ import org.lupus.commands.core.data.CommandLupi
 import org.lupus.commands.core.data.ConditionFun
 import org.lupus.commands.core.managers.ConditionManager
 import org.lupus.commands.core.messages.I18n
+import org.lupus.commands.core.messages.I18nMessage
 
 object CreativeCond : ConditionFun() {
 	override fun run(sender: CommandSender, commandLupi: CommandLupi, args: Array<Any>): Boolean {
@@ -17,6 +18,7 @@ object CreativeCond : ConditionFun() {
 	}
 
 	override fun getResponse(sender: CommandSender, commandLupi: CommandLupi, args: Array<Any>): Any {
-		return I18n[commandLupi.pluginRegistering, "creative-cond-response"]
+		val message = I18nMessage(commandLupi.pluginRegistering, "creative-cond-response")
+		return message.getI18nResponse()
 	}
 }

@@ -17,7 +17,8 @@ object ArgumentTypeList {
 		CommandSenderType,
 
 
-		VectorType
+		VectorType,
+		WorldType,
 	)
 	operator fun get(clazz: Class<out Any>): ArgumentType? {
 		for (value in arguments) {
@@ -29,12 +30,7 @@ object ArgumentTypeList {
 	}
 
 	fun contains(clazz: Class<*>): Boolean {
-		for (value in arguments) {
-			if (value.isTheArgumentOfThisType(clazz)) {
-				return true;
-			}
-		}
-		return false
+		return get(clazz) != null
 	}
 
 	fun register(type: ArgumentType) {

@@ -14,6 +14,7 @@ import org.lupus.commands.core.scanner.modifiers.MethodModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
 import java.lang.reflect.Method
 import org.lupus.commands.core.utils.LogUtil.outMsg
+import java.lang.reflect.Modifier
 import java.util.logging.Level
 
 class MethodScanner(
@@ -32,6 +33,10 @@ class MethodScanner(
 			outMsg("[LCF] INFO: Command method ${method.name} was found to not have executor parameter at least aborting..")
 			return null
 		}
+		if(Modifier.isPrivate(method.modifiers)) {
+			outMsg("[LCF] INFO: Command method ${method.name} was found to be private aborting...")
+		}
+
 		val commandName = method.name
 		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, method.declaringClass)
 

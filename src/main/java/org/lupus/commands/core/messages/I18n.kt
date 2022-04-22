@@ -2,6 +2,8 @@ package org.lupus.commands.core.messages
 
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
@@ -24,7 +26,7 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		if (loaded)
 			return
 		loaded = true
-		val properties: Properties = Properties()
+		val properties = Properties()
 		val config = this::class.java.classLoader.getResourceAsStream("locales/messages-en.properties") ?: return
 		properties.load(config)
 		this[null] = hashMapOf()
@@ -86,14 +88,33 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 	fun setLocale(plug: JavaPlugin, locale: String) {
 		locales[plug] = locale
 	}
+	private fun getTagResolver(objects: Array<out String>): TagResolver {
+		var tagResolver = TagResolver.builder()
+		var iter = 0
+		var lastKey = ""
+		for (obj in objects) {
+			if(iter % 2 == 0) {
+				lastKey = obj
+			}
+			else {
+				val placeHolder = Placeholder.parsed(lastKey, obj)
+				tagResolver = tagResolver.resolver(placeHolder)
+			}
+
+			iter++
+		}
+		return tagResolver.build()
+	}
 
 	operator fun get(plugin: JavaPlugin?, index: String, vararg objects: String): Component {
 		val mess = getUnformatted(plugin, index, *objects)
+
+
 		return MiniMessage
-			.get()
-			.parse(
+			.miniMessage()
+			.deserialize(
 				mess,
-				*objects
+				getTagResolver(objects)
 			)
 	}
 	fun getUnformatted(plugin: JavaPlugin?, index: String, vararg objects: String): String {
@@ -120,7 +141,16 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		return output
 	}
 	fun parseInput(plugin: JavaPlugin?, input: String, vararg objects: String): String {
-		return LegacyComponentSerializer.legacySection().serialize(MiniMessage.get().parse(getUnformatted(plugin, input), *objects))
+		return LegacyComponentSerializer
+			.legacySection()
+			.serialize(
+				MiniMessage
+					.miniMessage()
+					.deserialize(
+						getUnformatted(plugin, input),
+						getTagResolver(objects)
+					)
+			)
 	}
 
 }
