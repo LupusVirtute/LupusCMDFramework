@@ -3,8 +3,8 @@ package org.lupus.commands.core.utils
 import java.time.Instant
 
 object TimeUtil {
-    val numberRegex = "[0-9]*".toRegex()
-    val timeRegex = "([0-9]*mo)|([0-9]*d)|([0-9]*h)|([0-9]*m)|([0-9]*s)".toRegex()
+    val numberRegex = "\\d*".toRegex()
+    val timeRegex = "(\\d*mo)|(\\d*d)|(\\d*h)|(\\d*m)|(\\d*s)".toRegex()
     fun stringTimeToInstant(input: String): Instant {
         return Instant.now().plusSeconds(stringTimeToSeconds(input))
     }
