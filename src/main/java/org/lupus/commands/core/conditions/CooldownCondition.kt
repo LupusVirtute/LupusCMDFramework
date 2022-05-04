@@ -1,11 +1,13 @@
 package org.lupus.commands.core.conditions
 
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.lupus.commands.core.data.CommandLupi
 import org.lupus.commands.core.data.ConditionFun
 import org.lupus.commands.core.managers.CooldownManager
 import org.lupus.commands.core.messages.I18n
+import org.lupus.commands.core.messages.KeyValueBinder
 import org.lupus.commands.core.utils.TimeUtil
 import java.time.Instant
 
@@ -28,7 +30,9 @@ class CooldownCondition(
         val namespace = commandLupi.getNameSpace()
         val instant = CooldownManager.getPlayerCooldown(sender, namespace)
         val time = TimeUtil.epochSecondToString(instant)
-        return I18n[commandLupi.pluginRegistering, "cooldown", "cooldown-time", time]
+        val cooldownTime = Placeholder.parsed("cooldown-time", time)
+
+        return I18n[commandLupi.pluginRegistering, "cooldown", cooldownTime]
     }
 
 }
