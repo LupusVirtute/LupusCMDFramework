@@ -357,8 +357,12 @@ class CommandLupi(
 	}
 
 	override fun toString(): String {
-		return "CommandLupi(\n" +
-				"\tname:$fullName,\n\tdesc:$description,\n\tsyntax:$syntax,\n\tmethod:${method?.name},\n\tpermission:$permission" +
-				"\n);"
+		return "Command : " +
+				"\tName: $fullName," +
+				"\n\tDesc: $description," +
+				"\n\tSyntax: $syntax" +
+				",\n\tMethod: ${method?.name}" +
+				",\n\tPermission: $permission" +
+				"\n"
 	}
 }
