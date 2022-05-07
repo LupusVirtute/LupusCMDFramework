@@ -55,7 +55,10 @@ You can donate any amount you want if you don't want it's okay I will still main
 
 # TODO
 There's a lot to do I want to do here's a list of work I want to be done <br/>
-- [ ] Working I18n implementation for plugins to use
+- [x] Working I18n implementation for plugins to use
+- [ ] **Expand** the documentation
 - [ ] Command Life cycle events
 - [ ] Python script to show permission nodes for your code with tree graph or something
 - [ ] Test some edge cases
+- [ ] Add support for various platforms like Velocity
+- [ ] Test official Java Support
