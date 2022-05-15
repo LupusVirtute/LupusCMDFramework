@@ -244,7 +244,7 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 			return getUnformatted(null, index)
 		}
 
-		val locale = currentlyUsedLocales[plugin]
+		val locale = currentlyUsedLocales[plugin] ?: "en"
 		// Checks if the locale exists for given plugin if not try to get original message
 		if (this[plugin]!![locale] == null && plugin != null) {
 			return getUnformatted(null, index)
