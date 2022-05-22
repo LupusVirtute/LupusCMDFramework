@@ -60,7 +60,7 @@ object StringUtil {
 		return I18nMessage(plugin, i18nTag, *keyValueList.toTypedArray())
 	}
 
-	fun processI18n(plugin: JavaPlugin, response: Array<String>): Component {
+	fun processI18n(plugin: JavaPlugin?, response: Array<String>): Component {
 		if(response.isEmpty()) {
 			return Component.text("")
 		}
