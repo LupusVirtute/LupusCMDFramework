@@ -1,5 +1,7 @@
 package org.lupus.commands.core.scanner
 
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonArray
 import io.papermc.lib.PaperLib
 import org.bukkit.Bukkit
 import org.bukkit.Server
@@ -15,6 +17,7 @@ import org.lupus.commands.core.scanner.DefaultModifiers.anyMods
 import org.lupus.commands.core.scanner.DefaultModifiers.clazzMods
 import org.lupus.commands.core.scanner.DefaultModifiers.methodMods
 import org.lupus.commands.core.scanner.DefaultModifiers.paramModifiers
+import org.lupus.commands.core.utils.FileUtil
 import org.lupus.commands.core.utils.LogUtil.outMsg
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
@@ -23,8 +26,7 @@ import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.logging.Level
-import kotlin.collections.HashMap
+import kotlin.io.path.Path
 
 class Scanner(
 	private val plugin: JavaPlugin,
@@ -41,7 +43,7 @@ class Scanner(
 	/**
 	 * Scans given package path
 	 */
-	fun scan(packageName: String) {
+	fun scan(packageName: String, exportResults: Boolean = false) {
 
 		initPluginI18n(plugin);
 		initPluginTabComplete(plugin);
@@ -92,6 +94,9 @@ class Scanner(
 			namingSchema,
 			permissionPrefix
 		)
+
+		val results = mutableListOf<List<CommandLupi>>()
+
 		for (re in res) {
 			threadsRunning.incrementAndGet()
 			object : BukkitRunnable() {
@@ -107,6 +112,10 @@ class Scanner(
 						val command = scanner.scan(secondClazz)
 						if (command != null) {
 							val built = command.build()
+
+							if(exportResults)
+								results.add(built)
+
 							synchronized(commands) {
 								commands.addAll(built)
 							}
@@ -129,12 +138,40 @@ class Scanner(
 		object: BukkitRunnable() {
 			override fun run() {
 				if(threadsRunning.get() == 0) {
+					if(exportResults)
+						results
+							.flatten()
+							.map {
+								it.toGsonTree()
+							}
+							.run {
+								val json = JsonArray(this.size)
+								this.forEach { json.add(it)}
+
+								FileUtil.dumpToFile(
+									GsonBuilder()
+									.setPrettyPrinting()
+										.create()
+										.toJson(json),
+									Path("./exportedCommands.json").toFile()
+								)
+							}
+
 					registerBuiltCommands(plugin, commands)
 					cancel()
 				}
 			}
 		}.runTaskTimer(plugin, 1L,1L)
 	}
+	private fun flattenSubCommands(commandLupi: CommandLupi): List<CommandLupi> {
+		val flattenedCommands = commandLupi.subCommands.map {
+			flattenSubCommands(it)
+		}.flatten().toMutableList()
+
+		flattenedCommands.add(commandLupi)
+		return flattenedCommands
+	}
+
 	companion object {
 		private var regMain = false
 		// This is cache for registered tab completers

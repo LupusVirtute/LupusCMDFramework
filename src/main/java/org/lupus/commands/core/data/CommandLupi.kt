@@ -1,5 +1,8 @@
 package org.lupus.commands.core.data
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonElement
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
@@ -19,6 +22,7 @@ import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.messages.I18nMessage
 import org.lupus.commands.core.messages.KeyValueBinder
 import org.lupus.commands.core.utils.CommandUtil
+import org.lupus.commands.core.utils.ReflectionUtil
 import org.lupus.commands.core.utils.ReflectionUtil.getPrivateField
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
@@ -358,11 +362,30 @@ class CommandLupi(
 
 	override fun toString(): String {
 		return "Command : " +
-				"\tName: $fullName," +
+				"\n\tName: $fullName," +
 				"\n\tDesc: $description," +
 				"\n\tSyntax: $syntax" +
 				",\n\tMethod: ${method?.name}" +
 				",\n\tPermission: $permission" +
 				"\n"
+	}
+
+	private fun getGson(): Gson {
+		return GsonBuilder()
+			.setPrettyPrinting()
+			.registerTypeAdapter(CommandLupi::class.java, CommandLupiSerializer())
+			.create()
+	}
+
+	fun toJson() : String {
+		this.method?.isAccessible = false
+		return getGson()
+			.toJson(this)
+	}
+
+
+	fun toGsonTree(): JsonElement {
+		return getGson()
+			.toJsonTree(this)
 	}
 }
