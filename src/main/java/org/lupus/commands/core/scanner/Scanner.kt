@@ -135,27 +135,12 @@ class Scanner(
 		outMsg("")
 		outMsg("[LCF] Stopped scanning classes successfully scanned all classes")
 		outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
+
 		object: BukkitRunnable() {
 			override fun run() {
 				if(threadsRunning.get() == 0) {
 					if(exportResults)
-						results
-							.flatten()
-							.map {
-								it.toGsonTree()
-							}
-							.run {
-								val json = JsonArray(this.size)
-								this.forEach { json.add(it)}
-
-								FileUtil.dumpToFile(
-									GsonBuilder()
-									.setPrettyPrinting()
-										.create()
-										.toJson(json),
-									Path("./exportedCommands.json").toFile()
-								)
-							}
+						exportResults(results)
 
 					registerBuiltCommands(plugin, commands)
 					cancel()
@@ -163,13 +148,28 @@ class Scanner(
 			}
 		}.runTaskTimer(plugin, 1L,1L)
 	}
-	private fun flattenSubCommands(commandLupi: CommandLupi): List<CommandLupi> {
-		val flattenedCommands = commandLupi.subCommands.map {
-			flattenSubCommands(it)
-		}.flatten().toMutableList()
 
-		flattenedCommands.add(commandLupi)
-		return flattenedCommands
+	/**
+	 * Export given results from scanner to the exportedCommands.json
+	 */
+	private fun exportResults(results: MutableList<List<CommandLupi>>) {
+		results
+			.flatten()
+			.map {
+				it.toGsonTree()
+			}
+			.run {
+				val json = JsonArray(this.size)
+				this.forEach { json.add(it)}
+
+				FileUtil.dumpToFile(
+					GsonBuilder()
+						.setPrettyPrinting()
+						.create()
+						.toJson(json),
+					Path("./exportedCommands.json").toFile()
+				)
+			}
 	}
 
 	companion object {
