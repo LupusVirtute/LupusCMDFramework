@@ -56,6 +56,12 @@ class CommandLupi(
 
 	val tagRgx = "<([^>]*)>".toRegex()
 
+	// Is command registered in command map can only register once
+	var registered = false
+		set(value) {
+			field = if (value) value else field
+		}
+
 	val SOMETHING_WRONG = I18nMessage(pluginRegistering, "something-wrong")
 
 	val preRunComponents = mutableListOf(
@@ -311,29 +317,6 @@ class CommandLupi(
 		return null
 	}
 
-	var registered = false
-	/**
-	 * Registers the command for given plugin
-	 */
-	fun registerCommand(plugin: JavaPlugin) {
-		if (registered)
-			return
-
-		try {
-			val result: Any = getPrivateField(
-				Bukkit.getServer().pluginManager,
-				"commandMap"
-			)
-
-			val commandMap = result as SimpleCommandMap
-			commandMap.register(super.getName(), plugin.name, this)
-			val helpTopic = GenericCommandHelpTopic(this)
-			Bukkit.getServer().helpMap.addTopic(helpTopic)
-			registered = true
-		} catch (e: Exception) {
-			e.printStackTrace()
-		}
-	}
 
 	fun getArgs(offset: Int, args: Array<out String>): Array<out String> {
 		return getArgs(offset,-1, args)

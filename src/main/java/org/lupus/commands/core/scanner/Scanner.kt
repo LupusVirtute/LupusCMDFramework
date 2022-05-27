@@ -5,6 +5,8 @@ import com.google.gson.JsonArray
 import io.papermc.lib.PaperLib
 import org.bukkit.Bukkit
 import org.bukkit.Server
+import org.bukkit.command.SimpleCommandMap
+import org.bukkit.help.GenericCommandHelpTopic
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
 import org.lupus.commands.core.data.CommandBuilder
@@ -19,6 +21,7 @@ import org.lupus.commands.core.scanner.DefaultModifiers.methodMods
 import org.lupus.commands.core.scanner.DefaultModifiers.paramModifiers
 import org.lupus.commands.core.utils.FileUtil
 import org.lupus.commands.core.utils.LogUtil.outMsg
+import org.lupus.commands.core.utils.ReflectionUtil
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.scanners.TypeAnnotationsScanner
@@ -221,6 +224,9 @@ class Scanner(
 		fun registerBuiltCommands(plugin: JavaPlugin, commands: List<CommandLupi>) {
 			outMsg("[LCF] Started registering commands")
 			val timing = System.currentTimeMillis()
+
+			val commandsToRegister = mutableListOf<CommandLupi>()
+
 			for (command in commands) {
 				val lowerCaseName = command.name.lowercase()
 				MainCMDs[lowerCaseName] = command
@@ -231,14 +237,38 @@ class Scanner(
 					MainCMDs[lowerAlias] = command
 				}
 
-				command.registerCommand(plugin)
+				commandsToRegister.add(command)
 			}
+			commandMapRegisterCommands(plugin, commandsToRegister)
+
 			val clazz: Class<out Server?> = Bukkit.getServer().javaClass
 			val m = clazz.getDeclaredMethod("syncCommands")
 			m.invoke(Bukkit.getServer())
 
 			outMsg("[LCF] Stopped registering commands successfully")
 			outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
+		}
+
+		@Throws(NullPointerException::class)
+		private fun commandMapRegisterCommands(plugin: JavaPlugin, commands: List<CommandLupi>) {
+				val commandMap: SimpleCommandMap? =
+					try {
+						ReflectionUtil.getPrivateField(
+							Bukkit.getServer().pluginManager,
+							"commandMap"
+						) as SimpleCommandMap
+					} catch (e: Exception) {
+						e.printStackTrace()
+						null
+					}
+						?: throw NullPointerException("Somehow command map can't be accesed")
+
+			for (command in commands) {
+				commandMap?.register(command.name, plugin.name, command)
+				val helpTopic = GenericCommandHelpTopic(command)
+				Bukkit.getServer().helpMap.addTopic(helpTopic)
+				command.registered = true
+			}
 		}
 	}
 }
