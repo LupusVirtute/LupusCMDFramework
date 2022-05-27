@@ -71,4 +71,8 @@ object StringUtil {
 		return getI18nSyntax(plugin, response.toList()).getI18nResponse()
 	}
 
+	fun componentToString(component: Component): String {
+		return LegacyComponentSerializer.legacySection().serialize(component)
+	}
+
 }

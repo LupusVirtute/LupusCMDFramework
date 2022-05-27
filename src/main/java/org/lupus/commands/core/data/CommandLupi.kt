@@ -24,6 +24,7 @@ import org.lupus.commands.core.messages.KeyValueBinder
 import org.lupus.commands.core.utils.CommandUtil
 import org.lupus.commands.core.utils.ReflectionUtil
 import org.lupus.commands.core.utils.ReflectionUtil.getPrivateField
+import org.lupus.commands.core.utils.StringUtil
 import java.lang.reflect.Constructor
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
@@ -54,8 +55,6 @@ class CommandLupi(
 	var fullName: String = fullName
 		private set
 
-	val tagRgx = "<([^>]*)>".toRegex()
-
 	// Is command registered in command map can only register once
 	var registered = false
 		set(value) {
@@ -78,17 +77,9 @@ class CommandLupi(
 	)
 
 	override fun getDescription(): String {
-		return LegacyComponentSerializer
-			.legacyAmpersand()
-			.serialize( MiniMessage
-				.miniMessage()
-				.deserialize(
-					description.replace(tagRgx) {
-						val tagName = it.groups[1]?.value ?: return@replace it.value
-						I18n.getUnformatted(pluginRegistering, tagName)
-					}
-				)
-			)
+		return StringUtil.componentToString(
+			StringUtil.processI18n(pluginRegistering, arrayOf(description))
+		)
 	}
 	override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
 		if (!hasFlag(CommandFlag.ASYNC))
