@@ -198,7 +198,7 @@ open class CommandBuilder(
 		if(method != null)
 			if (hasFlag(CommandFlag.NO_PERM))
 				return ""
-		var perm = plugin.name.lowercase()
+		var perm = plugin.name
 		val supCommandPrefix = supCommand?.permission ?: ""
 		// It's sure to be the last
 		val methodName = getPermMethodPart()
