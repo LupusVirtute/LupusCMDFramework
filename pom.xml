@@ -39,7 +39,7 @@
 					</execution>
 				</executions>
 				<configuration>
-					<jvmTarget>16</jvmTarget>
+					<jvmTarget>17</jvmTarget>
 					<args>
 						<arg>-java-parameters</arg>
 					</args>
@@ -161,7 +161,7 @@
 		<dependency>
 			<groupId>io.papermc.paper</groupId>
 			<artifactId>paper-api</artifactId>
-			<version>1.17-R0.1-SNAPSHOT</version>
+			<version>1.18.1-R0.1-SNAPSHOT</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
