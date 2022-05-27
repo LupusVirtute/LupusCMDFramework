@@ -11,6 +11,7 @@ import org.lupus.commands.core.annotations.parameters.ParamName
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.messages.I18n
+import org.lupus.commands.core.messages.I18nMessage
 import org.lupus.commands.core.scanner.ClazzScanner
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
@@ -148,7 +149,8 @@ open class CommandBuilder(
 				LegacyComponentSerializer
 					.legacyAmpersand()
 					.serialize(
-						I18n[plugin, "sub-name"]
+						I18nMessage(plugin, "sub-name")
+							.getI18nResponse()
 					)
 			)
 		}
