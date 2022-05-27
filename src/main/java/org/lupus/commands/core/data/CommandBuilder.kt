@@ -40,30 +40,8 @@ open class CommandBuilder(
 		set(value) {
 			if (value == null)
 				return
-			var first = true
 			field = value
-			for (parameter in value.parameters) {
-				if (!ArgumentTypeList.contains(parameter.type)) {
-					outMsg("[LCF] ERROR: ${value.name} Command argument isn't defined in ArgumentTypeList did you load your command arguments before scanning class?",
-						Level.FATAL)
-					outMsg("If not use @NotCMD", Level.FATAL)
-					field = null
-					return
-				}
-
-				if (first) {
-					first = false
-					if (!CommandSender::class.java.isAssignableFrom(parameter.type)) {
-						outMsg("[LCF] First argument of method ${value.name} is not Bukkit CommandSender aborting")
-						field = null
-						return
-					}
-					this.executorParameter = parameter
-					continue
-				}
-				this.addParameter(parameter)
-			}
-			permission = getPerm()
+			initializeMethodParameters(value)
 		}
 
 	val aliases: MutableList<String> = mutableListOf()
@@ -90,42 +68,6 @@ open class CommandBuilder(
 	var anyModifiers: List<AnyModifier> = mutableListOf()
 	val conditions: MutableList<ConditionFun> = mutableListOf()
 
-	private fun hasFlag(flag: CommandFlag): Boolean {
-		return flags.contains(flag)
-	}
-	private fun getPerm(): String {
-		if(method != null)
-			if (hasFlag(CommandFlag.NO_PERM))
-				return ""
-		var perm = plugin.name.lowercase()
-		val supCommandPrefix = supCommand?.permission ?: ""
-		// It's sure to be the last
-		val methodName = getPermMethodPart()
-
-		if (supCommandPrefix.isNotEmpty()) {
-			perm = "$supCommandPrefix$methodName"
-			return perm.lowercase()
-		}
-		val clazzPrefix = getPermClazzPrefixPart()
-		perm += clazzPrefix
-
-		return perm.lowercase()
-	}
-	private fun getPermClazzPrefixPart(): String {
-		val clazzPrefix = declaringClazz
-			.name
-			.removePrefix("$packageName.")
-			.replace(namingSchema, "")
-
-		return ".${clazzPrefix}"
-	}
-	private fun getPermMethodPart(): String {
-		if (method == null)
-			return ""
-		var methodName = method?.name ?: ""
-		methodName = if(methodName.isNotEmpty()) ".$methodName" else ""
-		return methodName
-	}
 
 	var parameterCounter = 0
 	fun addParameter(parameter: Parameter): CommandBuilder {
@@ -244,6 +186,48 @@ open class CommandBuilder(
 		cmd.supCommand = this
     	this.subCommands.add(cmd)
 	}
+
+	fun addConditions(conditions: MutableList<ConditionFun>) {
+		this.conditions.addAll(conditions)
+	}
+
+	private fun hasFlag(flag: CommandFlag): Boolean {
+		return flags.contains(flag)
+	}
+	private fun getPerm(): String {
+		if(method != null)
+			if (hasFlag(CommandFlag.NO_PERM))
+				return ""
+		var perm = plugin.name.lowercase()
+		val supCommandPrefix = supCommand?.permission ?: ""
+		// It's sure to be the last
+		val methodName = getPermMethodPart()
+
+		if (supCommandPrefix.isNotEmpty()) {
+			perm = "$supCommandPrefix$methodName"
+			return perm.lowercase()
+		}
+		val clazzPrefix = getPermClazzPrefixPart()
+		perm += clazzPrefix
+
+		return perm.lowercase()
+	}
+	private fun getPermClazzPrefixPart(): String {
+		val clazzPrefix = declaringClazz
+			.name
+			.removePrefix("$packageName.")
+			.replace(namingSchema, "")
+
+		return ".${clazzPrefix}"
+	}
+	private fun getPermMethodPart(): String {
+		if (method == null)
+			return ""
+		var methodName = method?.name ?: ""
+		methodName = if(methodName.isNotEmpty()) ".$methodName" else ""
+		return methodName
+	}
+
 	private fun getCommandPass(method: Method?): Class<*>? {
 		if (method == null)
 			return null
@@ -251,8 +235,37 @@ open class CommandBuilder(
 		return pluginClazzLoader.loadClass("$packageName.$cmdPass")
 	}
 
-	fun addConditions(conditions: MutableList<ConditionFun>) {
-		this.conditions.addAll(conditions)
+	/**
+	 * Scans method for it's parameters and whether they can be casted to arguments
+	 */
+	private fun initializeMethodParameters(
+		methodToReplace: Method,
+	) {
+		var first = true
+		for (parameter in methodToReplace.parameters) {
+			if (!ArgumentTypeList.contains(parameter.type)) {
+				outMsg(
+					"[LCF] ERROR: ${methodToReplace.name} Command argument isn't defined in ArgumentTypeList did you load your command arguments before scanning class?",
+					Level.FATAL
+				)
+				outMsg("If not use @NotCMD", Level.FATAL)
+				this.method = null
+				return
+			}
+
+			if (first) {
+				first = false
+				if (!CommandSender::class.java.isAssignableFrom(parameter.type)) {
+					outMsg("[LCF] First argument of method ${methodToReplace.name} is not Bukkit CommandSender aborting")
+					this.method = null
+					return
+				}
+				this.executorParameter = parameter
+				continue
+			}
+			this.addParameter(parameter)
+		}
+		permission = getPerm()
 	}
 
 
