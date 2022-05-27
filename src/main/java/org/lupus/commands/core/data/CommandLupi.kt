@@ -276,7 +276,7 @@ class CommandLupi(
 		val commandList = mutableListOf<String>()
 
 		if (hasFlag(CommandFlag.HELP)) {
-			val commandName = I18n[pluginRegistering, "help-command-name"]
+			val commandName = I18nMessage(pluginRegistering, "help-command-name").getI18nResponse()
 			val plainTextCMD = PlainTextComponentSerializer.plainText().serialize(commandName)
 			if (plainTextCMD.startsWith(commandArg)) {
 				commandList.add(plainTextCMD)
