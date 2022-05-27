@@ -5,6 +5,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import org.apache.logging.log4j.core.tools.picocli.CommandLine.InitializationException
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import org.reflections.Reflections
@@ -239,6 +240,11 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 	 * @param index key tag for the translation
 	 */
 	fun getUnformatted(plugin: JavaPlugin?, index: String): String {
+
+		if(this[plugin] == null && plugin == null) {
+			throw InitializationException("You didn't initialize default I18n module don't use it then! :<")
+		}
+
 		// Check if the plugin is null if yes get the default message
 		if (this[plugin] == null) {
 			return getUnformatted(null, index)
