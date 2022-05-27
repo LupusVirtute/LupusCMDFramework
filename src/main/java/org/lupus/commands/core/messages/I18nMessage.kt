@@ -3,6 +3,7 @@ package org.lupus.commands.core.messages
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 
 class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: TagResolver) {
@@ -31,6 +32,10 @@ class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: TagResolve
         return I18n[plugin, path, args]
     }
 
+    fun getI18nResponseTranslated(locale: String): Component {
+        return I18n[plugin, path, locale, args]
+    }
+
     /**
      * Get non formatted message
      */
@@ -40,6 +45,14 @@ class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: TagResolve
 
     fun send(receiver: CommandSender) {
         receiver.sendMessage(getI18nResponse())
+    }
+
+    /**
+     * Sends message based on player's locale
+     */
+    fun sendTranslated(receiver: Player) {
+        val language = receiver.locale().language
+        receiver.sendMessage(getI18nResponseTranslated(language))
     }
 
     fun sendIfNotEmpty(receiver: CommandSender) {

@@ -213,6 +213,14 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 			)
 	}
 
+	operator fun get(plugin: JavaPlugin?, index: String, locale: String, tagResolver: TagResolver): Component {
+		val mess = getUnformattedTranslated(plugin, index, locale)
+
+		return MiniMessage
+			.miniMessage()
+			.deserialize(mess, tagResolver)
+	}
+
 	/**
 	 * Get mini message component for given i18n
 	 * @param plugin plugin that take information from
@@ -240,7 +248,11 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 	 * @param index key tag for the translation
 	 */
 	fun getUnformatted(plugin: JavaPlugin?, index: String): String {
+		val locale = currentlyUsedLocales[plugin] ?: "en"
+		return getUnformattedTranslated(plugin, index, locale)
+	}
 
+	fun getUnformattedTranslated(plugin: JavaPlugin?, index: String, locale: String): String {
 		if(this[plugin] == null && plugin == null) {
 			throw InitializationException("You didn't initialize default I18n module don't use it then! :<")
 		}
@@ -250,7 +262,7 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 			return getUnformatted(null, index)
 		}
 
-		val locale = currentlyUsedLocales[plugin] ?: "en"
+		val locale = locale.lowercase()
 		// Checks if the locale exists for given plugin if not try to get original message
 		if (this[plugin]!![locale] == null && plugin != null) {
 			return getUnformatted(null, index)
