@@ -24,6 +24,8 @@ class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: TagResolve
                 path,
                 I18n.getTagResolver(args)
             )
+    constructor(plugin: JavaPlugin?, path: String) :
+            this(plugin, path, TagResolver.empty())
 
     fun getI18nResponse(): Component {
         return I18n[plugin, path, args]
