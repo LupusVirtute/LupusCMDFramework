@@ -48,10 +48,10 @@ class Scanner(
 	 */
 	fun scan(packageName: String, exportResults: Boolean = false) {
 
-		initPluginI18n(plugin);
-		initPluginTabComplete(plugin);
+		initPluginI18n(plugin)
+        initPluginTabComplete(plugin)
 
-		this.packageName = packageName
+        this.packageName = packageName
 		val clazz = plugin::class.java
 		outMsg("[LCF] Reflections scan started")
 		var timing = System.currentTimeMillis()
