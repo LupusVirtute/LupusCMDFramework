@@ -27,7 +27,7 @@ import java.lang.reflect.Method
 class CommandLupi(
 	name: String,
 	description: String,
-	val syntax: String,
+	private val _syntax: String,
 	aliases: List<String>,
 	val subCommands: MutableList<CommandLupi>,
 	val method: Method?,
@@ -41,11 +41,11 @@ class CommandLupi(
 	val flags: Set<CommandFlag>,
 	val optionals: HashMap<Int, Array<String>>
 
-) : Command(name, description, syntax, aliases)
+) : Command(name, description, _syntax, aliases)
 {
 	init {
 		this.permission = permission
-		usage = "/$fullName $syntax"
+		usage = "/$fullName $_syntax"
 	}
 	var fullName: String = fullName
 		private set
@@ -55,6 +55,9 @@ class CommandLupi(
 		set(value) {
 			field = if (value) value else field
 		}
+
+	val syntax
+		get() = StringUtil.processI18n(pluginRegistering, arrayOf(_syntax))
 
 	val SOMETHING_WRONG = I18nMessage(pluginRegistering, "something-wrong")
 
@@ -123,7 +126,7 @@ class CommandLupi(
 		}
 
 		val fullNameCommand = KeyValueBinder("command", fullName)
-		val syntax = KeyValueBinder("syntax", syntax)
+		val syntax = KeyValueBinder("syntax", _syntax)
 
 		val badArg = I18nMessage(pluginRegistering, "bad-arg", fullNameCommand, syntax)
 
@@ -333,7 +336,7 @@ class CommandLupi(
 		return "Command : " +
 				"\n\tName: $fullName," +
 				"\n\tDesc: $description," +
-				"\n\tSyntax: $syntax" +
+				"\n\tSyntax: $_syntax" +
 				",\n\tMethod: ${method?.name}" +
 				",\n\tPermission: $permission" +
 				"\n"
