@@ -3,6 +3,7 @@ package org.lupus.commands.core.data
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.NamespacedKey
@@ -58,6 +59,9 @@ class CommandLupi(
 
 	val syntax
 		get() = StringUtil.processI18n(pluginRegistering, arrayOf(_syntax))
+
+	val rawSyntax
+		get() = LegacyComponentSerializer.legacySection().serialize(StringUtil.processI18n(pluginRegistering, arrayOf(_syntax)))
 
 	val SOMETHING_WRONG = I18nMessage(pluginRegistering, "something-wrong")
 
