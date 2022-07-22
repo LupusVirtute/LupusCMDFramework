@@ -186,7 +186,7 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 	 * text that is being going to change
 	 * @param placeHolders placeholders that are going to get added
 	 */
-	fun getTagResolver(placeHolders: Array<out TagResolver.Single>): TagResolver {
+	fun getTagResolver(placeHolders: Array<out TagResolver>): TagResolver {
 		val tagResolverBuilder = TagResolver.builder()
 		for (placeHolder in placeHolders) {
 			tagResolverBuilder.resolver(placeHolder)

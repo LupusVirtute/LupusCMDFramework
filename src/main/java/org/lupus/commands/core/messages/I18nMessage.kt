@@ -6,7 +6,8 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 
-class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: TagResolver) {
+class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: MutableList<TagResolver>) {
+
     constructor(plugin: JavaPlugin?,path: String, vararg args: KeyValueBinder):
             this(plugin,
                 path,
@@ -28,12 +29,15 @@ class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: TagResolve
     constructor(plugin: JavaPlugin?, path: String) :
             this(plugin, path, TagResolver.empty())
 
+    constructor(plugin: JavaPlugin?, path: String, args: TagResolver) :
+            this(plugin, path, mutableListOf(args))
+
     fun getI18nResponse(): Component {
-        return I18n[plugin, path, args]
+        return I18n[plugin, path, I18n.getTagResolver(args.toTypedArray())]
     }
 
     fun getI18nResponseTranslated(locale: String): Component {
-        return I18n[plugin, path, locale, args]
+        return I18n[plugin, path, locale, I18n.getTagResolver(args.toTypedArray())]
     }
 
     /**
@@ -45,6 +49,13 @@ class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: TagResolve
 
     fun send(receiver: CommandSender) {
         receiver.sendMessage(getI18nResponse())
+    }
+
+    fun addPlaceholder(placeholder: TagResolver.Single) {
+        args.add(placeholder)
+    }
+    fun addPlaceholders(placeholders: Collection<TagResolver.Single>) {
+        args.addAll(placeholders)
     }
 
     /**
