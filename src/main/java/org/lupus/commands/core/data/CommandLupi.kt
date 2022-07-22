@@ -324,9 +324,7 @@ class CommandLupi(
 		return arguments
 	}
 	fun getCMDsArgs(offset: Int, args: Array<out Any>): Array<out Any> {
-		var endOffset = -1
-		if (endOffset == -1)
-			endOffset = args.size
+		var endOffset = args.size
 		val arguments = Array<Any>(endOffset-offset) { "$it" }
 		System.arraycopy(args, offset, arguments, 0, endOffset-offset)
 		return arguments
