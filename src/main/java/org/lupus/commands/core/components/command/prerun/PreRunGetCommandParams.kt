@@ -13,7 +13,7 @@ class PreRunGetCommandParams(command: CommandLupi) : PreRunCommandComponent(comm
     private fun getCommandParameters(sender: CommandSender, args: Array<out String>): MutableList<Any>? {
         val arguments = mutableListOf<Any>()
         val commandFullName = KeyValueBinder("command",command.fullName)
-        val commandSyntax = KeyValueBinder("syntax",command.syntax)
+        val commandSyntax = KeyValueBinder("syntax",command.rawSyntax)
         val notForThisType = I18nMessage(command.pluginRegistering, "not-for-type", commandFullName, commandSyntax)
 
         if(command.executor == null)

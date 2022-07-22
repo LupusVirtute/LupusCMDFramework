@@ -11,7 +11,7 @@ class CommandLupiSerializer : JsonSerializer<CommandLupi> {
         result.add("name", JsonPrimitive(command.name))
         result.add("fullName", JsonPrimitive(command.fullName))
         result.add("desc", JsonPrimitive(command.description))
-        result.add("syntax", JsonPrimitive(command.syntax))
+        result.add("syntax", JsonPrimitive(command.rawSyntax))
         result.add("permission", JsonPrimitive(command.permission))
         result.add("pluginRegistering", JsonPrimitive(command.pluginRegistering.name))
 

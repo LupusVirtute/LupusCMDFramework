@@ -1,5 +1,6 @@
 package org.lupus.commands.core.components.command.prerun
 
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.command.CommandSender
 import org.lupus.commands.core.data.CommandFlag
 import org.lupus.commands.core.data.CommandLupi
@@ -51,7 +52,7 @@ class PreRunPickSubCommand(command: CommandLupi) : PreRunCommandComponent(comman
         var idx = 1
         for (subCommand in command.subCommands) {
             val commandFullName = subCommand.fullName
-            val syntax = subCommand.syntax
+            val syntax = subCommand.rawSyntax
             val desc = subCommand.description
 
             val commandFullNameBinded = KeyValueBinder("command", commandFullName)
