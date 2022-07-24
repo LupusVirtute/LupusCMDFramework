@@ -10,6 +10,7 @@ import org.bukkit.NamespacedKey
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
+import org.lupus.commands.core.annotations.method.Default
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.components.command.prerun.PreRunConditionCheck
 import org.lupus.commands.core.components.command.prerun.PreRunGetCommandParams
@@ -134,8 +135,10 @@ class CommandLupi(
 
 		val badArg = I18nMessage(pluginRegistering, "bad-arg", fullNameCommand, syntax)
 
-		if (method != null && subCMD == null) {
-			if (cmdParams == null) {
+		val isItCallForFunction = (subCMD == null || (subCommands.isNotEmpty() && args.isEmpty()) && hasDefault())
+
+		if (isItCallForFunction) {
+			if (cmdParams == null || method == null) {
 				badArg.send(sender)
 				return
 			}
@@ -143,6 +146,7 @@ class CommandLupi(
 			val res = method.invoke(obj, *cmdParams.toTypedArray())
 			if(res != null)
 				sendResponse(sender, res)
+			return
 		}
 
 		if (subCMD == null) {
@@ -164,6 +168,9 @@ class CommandLupi(
 		if(cmdParams == null && declaringClazz == clazz) {
 			subCMD.runCommand(sender, getArgs(parameterSize+1, args), inst)
 		}
+		else if(hasDefault()) {
+			subCMD.runCommand(sender, getArgs(parameterSize,args), inst)
+		}
 		else if(cmdParams != null) {
 			val constructed = getInstanceOfClazz(clazz, types, cmdParams) ?: return
 
@@ -173,6 +180,10 @@ class CommandLupi(
 			// It shouldn't technically go here!
 			SOMETHING_WRONG.send(sender)
 		}
+	}
+
+	private fun hasDefault(): Boolean {
+		return method?.isAnnotationPresent(Default::class.java) == true
 	}
 
 	// Given the following input:
