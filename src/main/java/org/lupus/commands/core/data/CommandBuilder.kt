@@ -123,7 +123,7 @@ open class CommandBuilder(
 	fun build(previousNameSpace: String = ""): List<CommandLupi> {
 		var previousNameSpace = previousNameSpace
 		if (previousNameSpace.isEmpty())
-			previousNameSpace = "$name"
+			previousNameSpace = name
 
 		val subCommands = mutableListOf<CommandLupi>()
 		for (subCommand in this.subCommands) {
