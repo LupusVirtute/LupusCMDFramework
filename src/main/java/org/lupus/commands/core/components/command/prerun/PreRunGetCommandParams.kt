@@ -42,8 +42,10 @@ class PreRunGetCommandParams(command: CommandLupi) : PreRunCommandComponent(comm
             
             val value: Any =
                 try {
-                    val argumentsForParameter = command.optionals[iterCount] ?: ArrayUtil.getArgs(argumentSpanCounter-argumentSpan, endOffset, args)
-
+                    val argumentsForParameter: Array<out String> = if(args.size < argumentSpanCounter)
+                        command.optionals[iterCount] ?: throw Exception("No arguments")
+                    else
+                        ArrayUtil.getArgs(argumentSpanCounter-argumentSpan, endOffset, args)
                     parameter.conversion(sender, *argumentsForParameter)
                 } catch(ex: Exception) {
                     null
