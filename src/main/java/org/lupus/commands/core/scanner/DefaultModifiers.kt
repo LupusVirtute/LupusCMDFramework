@@ -6,11 +6,12 @@ import org.lupus.commands.core.scanner.modifiers.clazz.ContinuousMod
 import org.lupus.commands.core.scanner.modifiers.clazz.HelpMod
 import org.lupus.commands.core.scanner.modifiers.method.CMDPassMod
 import org.lupus.commands.core.scanner.modifiers.method.DefaultMod
+import org.lupus.commands.core.scanner.modifiers.method.FilterPassMod
 import org.lupus.commands.core.scanner.modifiers.method.NotCMDMod
 
 object DefaultModifiers {
     val clazzMods = mutableListOf(ContinuousMod, HelpMod)
-    val methodMods = mutableListOf(CMDPassMod, DefaultMod, NotCMDMod, DefaultMod)
+    val methodMods = mutableListOf(CMDPassMod, DefaultMod, NotCMDMod, DefaultMod, FilterPassMod)
     val anyMods = mutableListOf(
         AliasesMod,
         AsyncMod,

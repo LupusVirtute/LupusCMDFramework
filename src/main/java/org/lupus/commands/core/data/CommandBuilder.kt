@@ -35,6 +35,7 @@ open class CommandBuilder(
     var permission = getPerm()
 	var description: String = ""
 	val flags: MutableSet<CommandFlag> = hashSetOf()
+	val filters: MutableList<FilterFun> = mutableListOf()
 
 
 	var method: Method? = null
@@ -170,7 +171,8 @@ open class CommandBuilder(
 			permission,
 			previousNameSpace,
 			flags,
-			optionals
+			optionals,
+			filters
 		)
 
 		outMsg(" ")

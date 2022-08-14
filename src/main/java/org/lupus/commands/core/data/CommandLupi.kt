@@ -41,7 +41,8 @@ class CommandLupi(
 	permission: String = "",
 	fullName: String = name,
 	val flags: Set<CommandFlag>,
-	val optionals: HashMap<Int, Array<String>>
+	val optionals: HashMap<Int, Array<String>>,
+	val filters: MutableList<FilterFun>
 
 ) : Command(name, description, _syntax, aliases)
 {
@@ -230,7 +231,7 @@ class CommandLupi(
 
 
 	fun tabComplete(sender: CommandSender, args: List<String>): MutableList<String> {
-		val tabComplete = suggestSubCommand(sender, args)
+		var tabComplete = suggestSubCommand(sender, args)
 		// If method is null then it's a sup command
 		// Should be then tab completed from the suggested sub command tab complete
 		if (args.size > parameters.size || method == null)
@@ -245,6 +246,10 @@ class CommandLupi(
 
 		val autoComplete = parameter.autoComplete(sender, *getArgumentsDependingOnArgumentSpan(args))
 		tabComplete.addAll(autoComplete)
+
+		for (filter in filters) {
+			tabComplete = filter.filterTabComplete(sender, this, parameter, tabComplete)
+		}
 
 		return tabComplete
 	}
