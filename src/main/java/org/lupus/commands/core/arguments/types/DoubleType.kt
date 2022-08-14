@@ -13,11 +13,12 @@ object DoubleType : ArgumentType(Double::class.java) {
 		val number = input[0].toDoubleOrNull() ?: return IntegerType.numbers.toMutableList()
 
 		val output = mutableListOf<String>()
-		if(!input[0].contains(".")) {
-			output.add("$number.")
-		}
+
 		for(i in 0..9) {
 			output.add("${input[0]}$i")
+			if(!input[0].contains(".")) {
+				output.add("$number.")
+			}
 		}
 		return output
 	}
