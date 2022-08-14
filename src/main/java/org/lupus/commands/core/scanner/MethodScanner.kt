@@ -29,6 +29,8 @@ class MethodScanner(
 ) {
 
     fun scan(): CommandBuilder? {
+		if(method.name.contains("\$lambda"))
+			return null
 		if(method.parameterCount == 0) {
 			outMsg("[LCF] INFO: Command method ${method.name} was found to not have executor parameter at least aborting..")
 			return null
