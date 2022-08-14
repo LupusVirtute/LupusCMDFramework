@@ -1,6 +1,7 @@
 package org.lupus.commands.core.messages
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -38,6 +39,27 @@ class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: MutableLis
 
     fun getI18nResponseTranslated(locale: String): Component {
         return I18n[plugin, path, locale, I18n.getTagResolver(args.toTypedArray())]
+    }
+
+    /**
+     * ### Splits message into list of components by spliting unformatted string by endline character '\n'
+     * #### Example: '<red>Hello\n world' turns into
+     * ```
+     * <red>Hello
+     * world
+     * ```
+     * #### 'world' word will be white whilst Hello will be red
+     */
+    fun getI18nResponseList(): List<Component> {
+        return getI18nUnformatted().split("\\n")
+            .map {
+                MiniMessage
+                    .miniMessage()
+                    .deserialize(
+                        it,
+                        I18n.getTagResolver(args.toTypedArray())
+                    )
+            }
     }
 
     /**
