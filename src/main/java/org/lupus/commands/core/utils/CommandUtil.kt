@@ -25,7 +25,11 @@ object CommandUtil {
                 continue
             }
             val name = subCommand.name
-            if (name.lowercase() == commandArg) {
+            val aliases = subCommand.aliases
+
+            val lowerCommandArg = commandArg.lowercase()
+
+            if (name.lowercase() == lowerCommandArg || aliases.contains(lowerCommandArg)) {
                 return subCommand
             }
         }

@@ -303,11 +303,16 @@ class CommandLupi(
 			if (!testPermissionSilent(sender)) {
 				continue
 			}
-			if (name.lowercase().startsWith(commandArg.lowercase())) {
+
+			val lowerCaseName = name.lowercase()
+			val lowerCaseCommandArg = commandArg.lowercase()
+			val aliasesStartingWith = subCommand.aliases.filter { it.startsWith(lowerCaseCommandArg) }.filterNotNull()
+			if (lowerCaseName.startsWith(lowerCaseCommandArg) || aliasesStartingWith.isNotEmpty() ) {
 				val res = suggestSubCommandParse(parSize, args, sender)
 				if(res != null)
 					return res
 				commandList.add(name.lowercase())
+				commandList.addAll(aliasesStartingWith)
 			}
 		}
 		return commandList
