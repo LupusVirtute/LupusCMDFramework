@@ -205,7 +205,7 @@ class CommandLupi(
 			return null
 		} ?: return null
 
-		return constructor.newInstance(*getCMDsArgs(1, cmdParams.toTypedArray()))
+		return constructor.newInstance(*cmdParams.toTypedArray())
 	}
 
 	fun getParametersTypes(): MutableList<out Class<*>> {
