@@ -194,7 +194,6 @@ class CommandLupi(
 		// Remove first type that is the player
 		// Player type is useless to us because it should be parsed anyway
 		// To the method because it needs to be first argument
-		types.removeFirst()
 		cmdParams.removeFirst()
 
 		val constructor: Constructor<*> =
