@@ -92,7 +92,7 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 			else
 				plugin.getResource(resource)
 
-			addStream(plugin, resStream, resource, locale)
+			addStream(plugin, resStream, locale, resource)
 		}
 
 		if (plugin == null)
