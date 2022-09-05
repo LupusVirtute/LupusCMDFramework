@@ -12,6 +12,8 @@ object ArgumentTypeList {
 		StringType,
 		GreedyStringType,
 
+		InstantType,
+
 		OfflinePlayerType,
 		PlayerType,
 		CommandSenderType,
