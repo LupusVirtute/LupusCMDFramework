@@ -4,6 +4,8 @@ import org.lupus.commands.core.arguments.types.*
 
 object ArgumentTypeList {
 	private val arguments: MutableList<ArgumentType> = mutableListOf(
+		BooleanType,
+
 		DoubleType,
 
 		IntegerType,
