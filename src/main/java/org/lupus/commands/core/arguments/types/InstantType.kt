@@ -10,7 +10,7 @@ import java.time.Instant
 object InstantType : ArgumentType(Instant::class.java,-1) {
     override fun conversion(sender: CommandSender, vararg input: String): Any? {
         val builder = StringBuilder()
-        builder.append(input)
+        builder.append(*input)
         val processInput = builder.toString()
         return TimeUtil.stringTimeToInstant(processInput)
     }
