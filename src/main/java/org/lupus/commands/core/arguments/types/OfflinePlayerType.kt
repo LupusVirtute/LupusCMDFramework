@@ -5,6 +5,9 @@ import org.bukkit.OfflinePlayer
 import org.bukkit.command.CommandSender
 import org.lupus.commands.core.arguments.ArgumentType
 
+/**
+ * Gets player regardless if he is online or offline
+ */
 object OfflinePlayerType : ArgumentType(OfflinePlayer::class.java) {
 	override fun conversion(sender: CommandSender, vararg input: String): Any? {
 		return Bukkit.getOfflinePlayerIfCached(input[0])
@@ -12,9 +15,12 @@ object OfflinePlayerType : ArgumentType(OfflinePlayer::class.java) {
 
 	override fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String> {
 		val players = mutableListOf<String>()
-		for (offlinePlayer in Bukkit.getOfflinePlayers()) {
+		val everyPlayer = Bukkit.getOfflinePlayers().toMutableList()
+		everyPlayer.addAll(Bukkit.getOnlinePlayers())
 
-			val playerNick = offlinePlayer.name ?: continue
+		for (player in everyPlayer) {
+
+			val playerNick = player.name ?: continue
 			if (playerNick.lowercase().startsWith(input[0].lowercase())) {
 				players.add(playerNick)
 			}
