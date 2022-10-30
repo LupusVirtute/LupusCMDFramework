@@ -15,9 +15,6 @@ abstract class ArgumentType @JvmOverloads constructor(
 	 */
 	var argumentName: String = "") {
 
-	init {
-		this::class.java.annotations
-	}
 
 	abstract fun conversion(sender: CommandSender, vararg input: String): Any?
 	abstract fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String>
