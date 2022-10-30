@@ -17,6 +17,7 @@ import org.lupus.commands.core.components.command.prerun.PreRunGetCommandParams
 import org.lupus.commands.core.components.command.prerun.PreRunPermissionCheck
 import org.lupus.commands.core.components.command.prerun.PreRunPickSubCommand
 import org.lupus.commands.core.components.command.response.ArrayResponseComponent
+import org.lupus.commands.core.components.command.response.I18nResponseComponent
 import org.lupus.commands.core.components.command.response.StringResponseComponent
 import org.lupus.commands.core.components.command.response.TextCompResponse
 import org.lupus.commands.core.messages.I18nMessage
@@ -77,7 +78,8 @@ class CommandLupi(
 	val responseComponents = mutableListOf(
 		ArrayResponseComponent::class.java.getDeclaredConstructor(CommandLupi::class.java),
 		StringResponseComponent::class.java.getDeclaredConstructor(CommandLupi::class.java),
-		TextCompResponse::class.java.getDeclaredConstructor(CommandLupi::class.java)
+		TextCompResponse::class.java.getDeclaredConstructor(CommandLupi::class.java),
+		I18nResponseComponent::class.java.getDeclaredConstructor(CommandLupi::class.java)
 	)
 
 	override fun getDescription(): String {
