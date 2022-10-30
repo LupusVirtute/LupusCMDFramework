@@ -7,6 +7,7 @@ object ArgumentTypeList {
 		BooleanType,
 
 		DoubleType,
+		FloatType,
 
 		IntegerType,
 		UIntegerType,
