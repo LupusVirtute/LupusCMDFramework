@@ -42,8 +42,8 @@ class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: MutableLis
     }
 
     /**
-     * ### Splits message into list of components by spliting unformatted string by endline character '\n'
-     * #### Example: '<red>Hello\n world' turns into
+     * ### Splits message into list of components by spliting unformatted string by endline character '\\n'
+     * #### Example: '<red>Hello\\n world' turns into
      * ```
      * <red>Hello
      * world
