@@ -93,11 +93,6 @@ open class CommandBuilder(
 		val argumentType = ArgumentTypeList[clazz]
 			?: throw IllegalArgumentException("clazz argument isn't in ArgumentTypes list")
 
-		// It would be weird if this would be null whilst we're adding parameters
-		if (method?.isAnnotationPresent(Syntax::class.java)!!) {
-			return this
-		}
-
 		if (argumentType.argumentSpan > 1) {
 			val argumentNames = argumentType.argumentName.split(',')
 
