@@ -1,11 +1,13 @@
 package org.lupus.commands.core.managers
 
 import org.lupus.commands.core.conditions.CreativeCond
+import org.lupus.commands.core.conditions.SurvivalCond
 import org.lupus.commands.core.data.ConditionFun
 
 object ConditionManager : HashMap<String, ConditionFun>() {
 	init {
 		ConditionManager["creative"] = CreativeCond
+		ConditionManager["survival"] = SurvivalCond
 	}
 
 	override operator fun get(key: String): ConditionFun? {
