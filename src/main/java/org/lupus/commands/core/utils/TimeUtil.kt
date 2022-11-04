@@ -39,6 +39,7 @@ object TimeUtil {
             epochSecond -= calcRest*timeClassifier.numberValue
             builder.append(output).append(' ')
         }
+		builder.removeSuffix(" ")
         return builder.toString()
     }
     private fun classifyAndCheck(classifier: TimeClassifier, input: String): Long {
