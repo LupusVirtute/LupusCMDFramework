@@ -37,7 +37,6 @@ class ClazzScanner(
 			return null
 		}
 
-
 		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, clazz)
 		cmdBuilder.paramModifiers = paramModifiers
 		cmdBuilder.anyModifiers = anyModifiers
@@ -47,6 +46,13 @@ class ClazzScanner(
 
 		modify(clazz, cmdBuilder, modifiers)
 		modify(clazz, cmdBuilder, anyModifiers)
+
+		val classes = clazz.declaredClasses
+		for (declaredClazz in classes) {
+			val subCommand = this.scan(declaredClazz, true) ?: continue
+			cmdBuilder.subCommands.add(subCommand)
+		}
+
 
 		for (method in clazz.declaredMethods) {
 
