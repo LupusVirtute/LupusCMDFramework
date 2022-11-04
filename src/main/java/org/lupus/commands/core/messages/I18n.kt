@@ -252,6 +252,12 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		return getUnformattedTranslated(plugin, index, locale)
 	}
 
+	/**
+	 * Get unformatted with tags and translated version of given locale
+	 * @param plugin plugin locale that translations will be taken from if null it will use default config
+	 * @param index path in i18n properties file
+	 * @param locale locale to translate for
+	 */
 	fun getUnformattedTranslated(plugin: JavaPlugin?, index: String, locale: String): String {
 		if(this[plugin] == null && plugin == null) {
 			throw InitializationException("You didn't initialize default I18n module don't use it then! :<")
