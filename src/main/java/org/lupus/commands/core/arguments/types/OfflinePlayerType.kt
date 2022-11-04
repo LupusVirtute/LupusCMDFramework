@@ -15,7 +15,7 @@ object OfflinePlayerType : ArgumentType(OfflinePlayer::class.java) {
 
 	override fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String> {
 		val players = mutableListOf<String>()
-		val everyPlayer = Bukkit.getOfflinePlayers().toMutableList()
+		val everyPlayer = Bukkit.getOfflinePlayers().toMutableSet()
 		everyPlayer.addAll(Bukkit.getOnlinePlayers())
 
 		for (player in everyPlayer) {
