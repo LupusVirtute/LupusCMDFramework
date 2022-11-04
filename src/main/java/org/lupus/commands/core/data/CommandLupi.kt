@@ -178,16 +178,15 @@ class CommandLupi(
 		else if(hasDefault()) {
 			subCMD.runCommand(sender, getArgs(parameterSize,args), inst)
 		}
-		else if(cmdParams != null) {
+		else if(cmdParams == null) {
+			subCMD.runCommand(sender, getArgs(parameterSize+1, args))
+		}
+		else {
 			val constructed = getInstanceOfClazz(clazz, types, cmdParams) ?: return
 
 			subCMD.injectDependencies(constructed)
 
 			subCMD.runCommand(sender, getArgs(parameterSize, args), constructed)
-		}
-		else {
-			// It shouldn't technically go here!
-			SOMETHING_WRONG.send(sender)
 		}
 	}
 
