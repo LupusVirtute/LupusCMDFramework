@@ -1,10 +1,11 @@
 package org.lupus.commands.core.arguments.types
 
 import org.bukkit.Bukkit
+import org.bukkit.World
 import org.bukkit.command.CommandSender
 import org.lupus.commands.core.arguments.ArgumentType
 
-object WorldType : ArgumentType(WorldType::class.java) {
+object WorldType : ArgumentType(World::class.java) {
 	override fun conversion(sender: CommandSender, vararg input: String): Any? {
 		return Bukkit.getWorld(input[0])
 	}
