@@ -178,8 +178,19 @@ class CommandLupi(
 		else if(hasDefault()) {
 			subCMD.runCommand(sender, getArgs(parameterSize,args), inst)
 		}
+		// Only should happen when has subclass sub-command
 		else if(cmdParams == null) {
-			subCMD.runCommand(sender, getArgs(parameterSize+1, args))
+			val fields = declaringClazz.declaredFields.filter { !it.isAnnotationPresent(Dependency::class.java) }
+			if (fields.isEmpty()) {
+				subCMD.runCommand(sender, getArgs(parameterSize+1, args))
+				return
+			}
+			val fieldValues = fields.mapNotNull { it.get(obj) }.toMutableList()
+			val constructed = getInstanceOfClazz(clazz, types, fieldValues) ?: throw Error("You should pass your command arguments")
+
+			subCMD.injectDependencies(constructed)
+
+			subCMD.runCommand(sender, getArgs(parameterSize+1, args), constructed)
 		}
 		else {
 			val constructed = getInstanceOfClazz(clazz, types, cmdParams) ?: return
