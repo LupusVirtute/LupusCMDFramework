@@ -21,6 +21,7 @@ object ArgumentTypeList {
 		PlayerType,
 		CommandSenderType,
 
+		PluginType,
 
 		VectorType,
 		WorldType,
