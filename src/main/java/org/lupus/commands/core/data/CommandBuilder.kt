@@ -16,6 +16,7 @@ import org.lupus.commands.core.scanner.ClazzScanner
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
 import org.lupus.commands.core.utils.LogUtil.outMsg
+import org.lupus.commands.core.utils.StringUtil
 import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 
@@ -75,7 +76,13 @@ open class CommandBuilder(
 	fun addParameter(parameter: Parameter): CommandBuilder {
 
 		val clazz = parameter.type
-		val parameterName = parameter.getAnnotation(ParamName::class.java)?.paramName ?: parameter.name
+		var parameterName = parameter.getAnnotation(ParamName::class.java)?.paramName ?: parameter.name
+		if(StringUtil.isThatI18nSyntax(parameterName)) {
+			parameterName = LegacyComponentSerializer.legacySection().serialize(
+				StringUtil.getI18nSyntax(plugin, listOf(parameterName)).getI18nResponse()
+			)
+		}
+
 		val optional = parameter.getAnnotation(Optional::class.java) ?: null
 		if(optional != null)
 			optionals[parameterCounter] = optional.default.split("|").toTypedArray()
