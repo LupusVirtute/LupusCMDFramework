@@ -176,6 +176,9 @@ class Scanner(
 	}
 
 	companion object {
+		/**
+		 * Serves as a check if main I18n messages were registered
+		 */
 		private var regMain = false
 		// This is cache for registered tab completers
 		private var reg: HashMap<JavaPlugin, Boolean> = hashMapOf()
