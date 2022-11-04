@@ -17,6 +17,7 @@ import org.lupus.commands.core.managers.MainCMDs
 import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.scanner.DefaultModifiers.anyMods
 import org.lupus.commands.core.scanner.DefaultModifiers.clazzMods
+import org.lupus.commands.core.scanner.DefaultModifiers.fieldsModifier
 import org.lupus.commands.core.scanner.DefaultModifiers.methodMods
 import org.lupus.commands.core.scanner.DefaultModifiers.paramModifiers
 import org.lupus.commands.core.utils.FileUtil
@@ -94,6 +95,7 @@ class Scanner(
 			anyMods,
 			methodMods,
 			paramModifiers,
+			fieldsModifier,
 			namingSchema,
 			permissionPrefix
 		)

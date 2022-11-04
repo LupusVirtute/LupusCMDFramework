@@ -14,6 +14,7 @@ class ClazzScanner(
 		private val anyModifiers: List<AnyModifier> = DefaultModifiers.anyMods,
 		private val methodModifiers: List<MethodModifier> = DefaultModifiers.methodMods,
 		private val paramModifiers: List<ParameterModifier> = DefaultModifiers.paramModifiers,
+		private val fieldModifiers: List<FieldsModifier> = DefaultModifiers.fieldsModifier,
 		private val namingSchema: Regex = Regex("Command|CMD"),
 		private val permissionPrefix: String = ""
 ) {
@@ -40,6 +41,7 @@ class ClazzScanner(
 		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, clazz)
 		cmdBuilder.paramModifiers = paramModifiers
 		cmdBuilder.anyModifiers = anyModifiers
+		cmdBuilder.fieldsModifiers = fieldModifiers
 
 		cmdBuilder.permission = permissionPrefix + cmdBuilder.permission
 
@@ -56,6 +58,7 @@ class ClazzScanner(
 				anyModifiers,
 				methodModifiers,
 				paramModifiers,
+				fieldModifiers,
 				permissionPrefix
 			)
 
@@ -67,6 +70,7 @@ class ClazzScanner(
 			}
 			cmdBuilder.subCommands.add(command)
 		}
+		cmdBuilder.runFieldScan()
 
 		outMsg("[LCF] Main Command Built!")
 		return cmdBuilder

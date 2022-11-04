@@ -10,6 +10,7 @@ import org.bukkit.NamespacedKey
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
+import org.lupus.commands.core.annotations.Dependency
 import org.lupus.commands.core.annotations.method.Default
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.components.command.prerun.PreRunConditionCheck
@@ -43,7 +44,8 @@ class CommandLupi(
 	fullName: String = name,
 	val flags: Set<CommandFlag>,
 	val optionals: HashMap<Int, Array<String>>,
-	val filters: MutableList<FilterFun>
+	val filters: MutableList<FilterFun>,
+	val injectableDependencies: HashMap<Class<*>, Any>
 
 ) : Command(name, description, _syntax, aliases)
 {
@@ -112,6 +114,8 @@ class CommandLupi(
 			return
 		}
 
+		injectDependencies(obj)
+
 		runCommand(sender, args, obj)
 	}
 	private fun runCommand(sender: CommandSender, args: Array<out String>, obj: Any) {
@@ -176,6 +180,8 @@ class CommandLupi(
 		}
 		else if(cmdParams != null) {
 			val constructed = getInstanceOfClazz(clazz, types, cmdParams) ?: return
+
+			subCMD.injectDependencies(constructed)
 
 			subCMD.runCommand(sender, getArgs(parameterSize, args), constructed)
 		}
@@ -383,5 +389,18 @@ class CommandLupi(
 	fun toGsonTree(): JsonElement {
 		return getGson()
 			.toJsonTree(this)
+	}
+
+	private fun injectDependencies(obj: Any) {
+		for (injectableDependency in injectableDependencies) {
+			for (declaredField in obj::class.java.declaredFields) {
+				if (injectableDependency.key != declaredField.type) return
+				if(!declaredField.isAnnotationPresent(Dependency::class.java)) return
+
+				declaredField.isAccessible = true
+
+				declaredField.set(obj, injectableDependency.value)
+			}
+		}
 	}
 }

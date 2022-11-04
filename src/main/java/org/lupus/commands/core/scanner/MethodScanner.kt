@@ -8,10 +8,8 @@ import org.lupus.commands.core.annotations.method.Default
 import org.lupus.commands.core.annotations.method.NotCMD
 import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.data.CommandBuilder
-import org.lupus.commands.core.scanner.modifiers.AnyModifier
-import org.lupus.commands.core.scanner.modifiers.BaseModifier
-import org.lupus.commands.core.scanner.modifiers.MethodModifier
-import org.lupus.commands.core.scanner.modifiers.ParameterModifier
+import org.lupus.commands.core.scanner.modifiers.*
+import org.lupus.commands.core.scanner.modifiers.method.DefaultMod
 import java.lang.reflect.Method
 import org.lupus.commands.core.utils.LogUtil.outMsg
 import java.lang.reflect.Modifier
@@ -25,6 +23,7 @@ class MethodScanner(
 	val anyModifiers: List<AnyModifier> = DefaultModifiers.anyMods,
 	val methodModifiers: List<MethodModifier> = DefaultModifiers.methodMods,
 	val paramModifiers: List<ParameterModifier> = DefaultModifiers.paramModifiers,
+	val fieldModifiers: List<FieldsModifier> = DefaultModifiers.fieldsModifier,
 	val permissionPrefix: String = "",
 ) {
 
@@ -44,6 +43,7 @@ class MethodScanner(
 
 		cmdBuilder.anyModifiers = anyModifiers
 		cmdBuilder.paramModifiers = paramModifiers
+		cmdBuilder.fieldsModifiers = fieldModifiers
 
 		cmdBuilder.method = method
 		cmdBuilder.permission = supCommand.permission

@@ -4,6 +4,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.apache.logging.log4j.Level
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
+import org.lupus.commands.core.annotations.Dependency
 import org.lupus.commands.core.annotations.method.CMDPass
 import org.lupus.commands.core.annotations.method.Syntax
 import org.lupus.commands.core.annotations.parameters.Optional
@@ -13,7 +14,9 @@ import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.messages.I18nMessage
 import org.lupus.commands.core.scanner.ClazzScanner
+import org.lupus.commands.core.scanner.DefaultModifiers
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
+import org.lupus.commands.core.scanner.modifiers.FieldsModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
 import org.lupus.commands.core.utils.LogUtil.outMsg
 import org.lupus.commands.core.utils.StringUtil
@@ -69,8 +72,20 @@ open class CommandBuilder(
 	var executorParameter: Parameter? = null
 	var paramModifiers: List<ParameterModifier> = mutableListOf()
 	var anyModifiers: List<AnyModifier> = mutableListOf()
-	val conditions: MutableList<ConditionFun> = mutableListOf()
+	var fieldsModifiers: List<FieldsModifier> = mutableListOf()
 
+	val conditions: MutableList<ConditionFun> = mutableListOf()
+	val injectableDependencies: HashMap<Class<*>, Any> = hashMapOf()
+
+	fun runFieldScan() {
+		for (declaredField in declaringClazz.declaredFields) {
+			if (!declaredField.isAnnotationPresent(Dependency::class.java)) continue
+			val annotation = declaredField.getAnnotation(Dependency::class.java)
+			for (fieldModifier in fieldsModifiers) {
+				fieldModifier.modify(this, annotation, declaredField)
+			}
+		}
+	}
 
 	var parameterCounter = 0
 	fun addParameter(parameter: Parameter): CommandBuilder {
@@ -174,7 +189,8 @@ open class CommandBuilder(
 			previousNameSpace,
 			flags,
 			optionals,
-			filters
+			filters,
+			injectableDependencies
 		)
 
 		outMsg(" ")
