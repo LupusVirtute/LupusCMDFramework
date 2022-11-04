@@ -8,11 +8,10 @@ object DependencyInjectorMap : HashMap<JavaPlugin, HashMap<Class<out Any>, Any>>
 			this[plugin] = hashMapOf()
 		this[plugin]!![clazz] = obj
 	}
-	fun addDependencies(plugin: JavaPlugin, vararg dependencies: Any) {
-		if(this[plugin] == null)
-			this[plugin] = hashMapOf()
-		for (any in dependencies) {
-			this[plugin]!![any::class.java] = any
-		}
+	fun addDependencies(plugin: JavaPlugin, dependencies: HashMap<Class<out Any>, Any>) {
+		if (this[plugin] == null)
+			this[plugin] = dependencies
+		else
+			this[plugin]!!.putAll(dependencies)
 	}
 }

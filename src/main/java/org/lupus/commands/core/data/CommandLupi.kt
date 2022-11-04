@@ -394,8 +394,8 @@ class CommandLupi(
 	private fun injectDependencies(obj: Any) {
 		for (injectableDependency in injectableDependencies) {
 			for (declaredField in obj::class.java.declaredFields) {
-				if (injectableDependency.key != declaredField.type) return
-				if(!declaredField.isAnnotationPresent(Dependency::class.java)) return
+				if (injectableDependency.key != declaredField.type) continue
+				if(!declaredField.isAnnotationPresent(Dependency::class.java)) continue
 
 				declaredField.isAccessible = true
 
