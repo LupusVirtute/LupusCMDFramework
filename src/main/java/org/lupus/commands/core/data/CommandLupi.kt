@@ -179,14 +179,26 @@ class CommandLupi(
 			subCMD.runCommand(sender, getArgs(parameterSize,args), inst)
 		}
 		// Only should happen when has subclass sub-command
+		// Worst thing only that could happen is saving variables in command and not having an idea that it passes also fields that are not listed as @Dependency
 		else if(cmdParams == null) {
-			val fields = declaringClazz.declaredFields.filter { !it.isAnnotationPresent(Dependency::class.java) }
+			val fields = declaringClazz.declaredFields.filter { !it.isAnnotationPresent(Dependency::class.java) }.filterNotNull()
 			if (fields.isEmpty()) {
 				subCMD.runCommand(sender, getArgs(parameterSize+1, args))
 				return
 			}
-			val fieldValues = fields.mapNotNull { it.get(obj) }.toMutableList()
-			val constructed = getInstanceOfClazz(clazz, types, fieldValues) ?: throw Error("You should pass your command arguments")
+			val fieldValues = fields.mapNotNull {
+				it.isAccessible = true
+				val out = it.get(obj)
+				it.isAccessible = false
+
+				out
+			}.toMutableList()
+
+			val fieldTypes = fields.mapNotNull {
+				it.type
+			}.toMutableList()
+
+			val constructed = getInstanceOfClazz(clazz, fieldTypes, fieldValues, false) ?: throw Error("You should pass your command arguments")
 
 			subCMD.injectDependencies(constructed)
 
@@ -208,11 +220,13 @@ class CommandLupi(
 	// Given the following input:
 	// subCommand1 args1 args2 subCommand2 args1 args2 subCommand3 args1 args2
 	// subCommands offset is dependent on the number of args in the subCommand
-	private fun getInstanceOfClazz(clazz: Class<*>, types: MutableList<out Class<*>>, cmdParams: MutableList<Any>): Any? {
+	private fun getInstanceOfClazz(clazz: Class<*>, types: MutableList<out Class<*>>, cmdParams: MutableList<Any>, isPlayerFirst: Boolean = true): Any? {
+
 		// Remove first type that is the player
 		// Player type is useless to us because it should be parsed anyway
 		// To the method because it needs to be first argument
-		cmdParams.removeFirst()
+		if(isPlayerFirst)
+			cmdParams.removeFirst()
 
 		val constructor: Constructor<*> =
 		try {

@@ -203,7 +203,7 @@ open class CommandBuilder(
 	}
 
     fun addSubCommandPass(pass: String) {
-		val subCommand = pluginClazzLoader.loadClass("$packageName.$pass") ?: return
+		val subCommand = pluginClazzLoader.loadClass(pass) ?: return
 		val cmd = ClazzScanner(plugin, packageName).scan(subCommand,true) ?: return
 		cmd.supCommand = this
     	this.subCommands.add(cmd)

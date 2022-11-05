@@ -10,7 +10,7 @@ object CMDPassMod : MethodModifier(CMDPass::class.java) {
         isThisAnnotationValid(annotation)
         annotation as CMDPass
         val cmdPath = annotation.commandPath
-        cmdBuilder.addSubCommandPass(cmdPath)
+        cmdBuilder.addSubCommandPass("${cmdBuilder.packageName}.$cmdPath")
     }
 
 }
