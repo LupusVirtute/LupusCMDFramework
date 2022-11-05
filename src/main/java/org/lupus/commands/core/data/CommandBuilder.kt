@@ -203,7 +203,7 @@ open class CommandBuilder(
 	}
 
     fun addSubCommandPass(pass: String) {
-		val subCommand = getCommandPass(method) ?: return
+		val subCommand = pluginClazzLoader.loadClass("$packageName.$pass") ?: return
 		val cmd = ClazzScanner(plugin, packageName).scan(subCommand,true) ?: return
 		cmd.supCommand = this
     	this.subCommands.add(cmd)
@@ -250,12 +250,6 @@ open class CommandBuilder(
 		return methodName
 	}
 
-	private fun getCommandPass(method: Method?): Class<*>? {
-		if (method == null)
-			return null
-		val cmdPass = method.getAnnotation(CMDPass::class.java)?.commandPath ?: return null
-		return pluginClazzLoader.loadClass("$packageName.$cmdPass")
-	}
 
 	/**
 	 * Scans method for it's parameters and whether they can be casted to arguments
