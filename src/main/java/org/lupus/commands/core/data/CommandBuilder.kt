@@ -113,7 +113,7 @@ open class CommandBuilder(
 		}
 
 		val argumentType = ArgumentTypeList[clazz]
-			?: throw IllegalArgumentException("clazz argument isn't in ArgumentTypes list")
+			?: throw IllegalArgumentException("$clazz argument isn't in ArgumentTypes list https://github.com/LupusVirtute/LupusCMDFramework/wiki/Clazz-argument-isn't-in-ArgumentTypes-List")
 
 		if (argumentType.argumentSpan > 1) {
 			val argumentNames = argumentType.argumentName.split(',')
@@ -204,6 +204,7 @@ open class CommandBuilder(
 
     fun addSubCommandPass(pass: String) {
 		val subCommand = pluginClazzLoader.loadClass(pass) ?: return
+		if (subCommand == declaringClazz) throw Error("Infinite loop detected https://github.com/LupusVirtute/LupusCMDFramework/wiki/Infinite-Loops")
 		val cmd = ClazzScanner(plugin, packageName).scan(subCommand,true) ?: return
 		cmd.supCommand = this
     	this.subCommands.add(cmd)
