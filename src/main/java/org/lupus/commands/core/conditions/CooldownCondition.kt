@@ -16,10 +16,10 @@ class CooldownCondition(
     ) : ConditionFun() {
     override fun run(sender: CommandSender, commandLupi: CommandLupi, args: Array<Any>): Boolean {
         if (sender !is Player)
-            return true
+            return false
 
 		if (sender.hasPermission("cooldown.ignore"))
-			return false
+			return true
 
 		val namespace = commandLupi.getNameSpace()
         val hasCooldown = !CooldownManager.playerHasCooldown(sender, namespace)
