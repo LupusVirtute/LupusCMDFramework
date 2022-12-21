@@ -3,6 +3,7 @@ package org.lupus.commands.core.data
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
@@ -253,6 +254,8 @@ class CommandLupi(
 			val constructed = constructor.newInstance(this)
 			if(!constructed.compare(res))
 				continue
+			if (res == Component.empty())
+				break
 			val message = constructed.run(res)
 			sender.sendMessage(message)
 			break
