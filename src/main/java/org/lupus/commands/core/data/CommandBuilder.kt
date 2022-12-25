@@ -151,6 +151,7 @@ open class CommandBuilder(
 					"${this.syntax} ${subCommand.name} "
 						// Replace double space if any exists
 						.replace("  ", " ")
+			subCommand.injectableDependencies.putAll(this.injectableDependencies)
 			subCommands.addAll(subCommand.build(nameSpace))
 		}
 
