@@ -1,20 +1,25 @@
 package org.lupus.commands.core.components.command.response
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.ComponentLike
+import net.kyori.adventure.text.JoinConfiguration
 import net.kyori.adventure.text.minimessage.MiniMessage
+import org.lupus.commands.core.components.command.response.arrays.ArrayResponseType
+import org.lupus.commands.core.components.command.response.arrays.ComponentLikeResponse
+import org.lupus.commands.core.components.command.response.arrays.StringResponse
 import org.lupus.commands.core.data.CommandLupi
 import org.lupus.commands.core.utils.StringUtil
 
 class ArrayResponseComponent(command: CommandLupi) : CommandResponseComponent(command, Array::class.java) {
+	val arrayResponseTypes = mutableListOf(ComponentLikeResponse(command), StringResponse(command))
+
     override fun run(input: Any): Component {
         input as Array<*>
-        if (input.first() is String) {
-            if (!StringUtil.isThatI18nSyntax(input.first() as String)) {
-                return MiniMessage.miniMessage().deserialize(input.first() as String)
-            }
-
-            return StringUtil.getI18nSyntax(command.pluginRegistering, (input as Array<String>).toList()).getI18nResponse()
-        }
+		for (arrayResponseType in arrayResponseTypes) {
+			if (arrayResponseType.check(input)) {
+				return arrayResponseType.componentResponse(input)
+			}
+		}
         return Component.text("")
     }
 

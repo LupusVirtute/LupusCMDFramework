@@ -6,6 +6,7 @@ import org.lupus.commands.core.scanner.modifiers.any.*
 import org.lupus.commands.core.scanner.modifiers.clazz.ContinuousMod
 import org.lupus.commands.core.scanner.modifiers.clazz.HelpMod
 import org.lupus.commands.core.scanner.modifiers.fields.DependencyModifier
+import org.lupus.commands.core.scanner.modifiers.fields.NamedDependencyModifier
 import org.lupus.commands.core.scanner.modifiers.method.CMDPassMod
 import org.lupus.commands.core.scanner.modifiers.method.DefaultMod
 import org.lupus.commands.core.scanner.modifiers.method.FilterPassMod
@@ -26,5 +27,5 @@ object DefaultModifiers {
         SyntaxMod,
     )
     val paramModifiers = mutableListOf<ParameterModifier>()
-	val fieldsModifier = mutableListOf<FieldsModifier>(DependencyModifier)
+	val fieldsModifier = mutableListOf(DependencyModifier, NamedDependencyModifier)
 }
