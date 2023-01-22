@@ -146,12 +146,13 @@ open class CommandBuilder(
 
 		val subCommands = mutableListOf<CommandLupi>()
 		for (subCommand in this.subCommands) {
-			var nameSpace = previousNameSpace
+			var nameSpace = subCommand.name
 			if (!hasFlag(CommandFlag.CONTINUOUS) && !subCommand.hasFlag(CommandFlag.CONTINUOUS))
 				nameSpace +=
 					"${this.syntax} ${subCommand.name} "
 						// Replace double space if any exists
 						.replace("  ", " ")
+
 			subCommand.injectableDependencies.putAll(this.injectableDependencies)
 			subCommand.namedInjectableDependencies.putAll(this.namedInjectableDependencies)
 			subCommands.addAll(subCommand.build(nameSpace))
