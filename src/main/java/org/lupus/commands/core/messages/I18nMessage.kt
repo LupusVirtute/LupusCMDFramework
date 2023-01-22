@@ -97,4 +97,11 @@ class I18nMessage(val plugin: JavaPlugin?,val path: String, val args: MutableLis
     fun sendUnFormatted(receiver: CommandSender) {
         receiver.sendMessage(getI18nUnformatted())
     }
+
+	fun sendResponseList(receiver: CommandSender) {
+		val responseList = getI18nResponseList()
+		for (component in responseList) {
+			receiver.sendMessage(component)
+		}
+	}
 }
