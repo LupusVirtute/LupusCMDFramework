@@ -12,6 +12,7 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.annotations.Dependency
+import org.lupus.commands.core.annotations.NamedDependency
 import org.lupus.commands.core.annotations.method.Default
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.components.command.prerun.PreRunConditionCheck
@@ -46,7 +47,8 @@ class CommandLupi(
 	val flags: Set<CommandFlag>,
 	val optionals: HashMap<Int, Array<String>>,
 	val filters: MutableList<FilterFun>,
-	val injectableDependencies: HashMap<Class<*>, Any>
+	val injectableDependencies: HashMap<Class<*>, Any>,
+	val namedInjectableDependencies: HashMap<String, Any>
 
 ) : Command(name, description, _syntax, aliases)
 {
@@ -421,8 +423,20 @@ class CommandLupi(
 	private fun injectDependencies(obj: Any) {
 		for (injectableDependency in injectableDependencies) {
 			for (declaredField in obj::class.java.declaredFields) {
-				if (injectableDependency.key != declaredField.type) continue
 				if(!declaredField.isAnnotationPresent(Dependency::class.java)) continue
+
+				if (injectableDependency.key != declaredField.type) continue
+
+				declaredField.isAccessible = true
+
+				declaredField.set(obj, injectableDependency.value)
+			}
+		}
+		for(injectableDependency in namedInjectableDependencies) {
+			for (declaredField in obj::class.java.declaredFields) {
+				if(!declaredField.isAnnotationPresent(NamedDependency::class.java)) continue
+
+				if (injectableDependency.key != declaredField.name) continue
 
 				declaredField.isAccessible = true
 

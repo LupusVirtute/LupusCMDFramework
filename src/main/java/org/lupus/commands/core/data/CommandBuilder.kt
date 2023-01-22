@@ -76,6 +76,7 @@ open class CommandBuilder(
 
 	val conditions: MutableList<ConditionFun> = mutableListOf()
 	val injectableDependencies: HashMap<Class<*>, Any> = hashMapOf()
+	val namedInjectableDependencies: HashMap<String, Any> = hashMapOf()
 
 	fun runFieldScan() {
 		for (declaredField in declaringClazz.declaredFields) {
@@ -152,6 +153,7 @@ open class CommandBuilder(
 						// Replace double space if any exists
 						.replace("  ", " ")
 			subCommand.injectableDependencies.putAll(this.injectableDependencies)
+			subCommand.namedInjectableDependencies.putAll(this.namedInjectableDependencies)
 			subCommands.addAll(subCommand.build(nameSpace))
 		}
 
@@ -191,7 +193,8 @@ open class CommandBuilder(
 			flags,
 			optionals,
 			filters,
-			injectableDependencies
+			injectableDependencies,
+			namedInjectableDependencies
 		)
 
 		outMsg(" ")
