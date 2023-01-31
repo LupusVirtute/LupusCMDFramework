@@ -6,13 +6,14 @@ import org.bukkit.entity.Player
 import org.lupus.commands.core.arguments.ArgumentType
 
 
-object PlayerType : ArgumentType(Player::class.java) {
+object PlayerType : ArgumentType(Player::class.java, canBeWildCard = true) {
 	override fun conversion(sender: CommandSender, vararg input: String): Any? {
 		return Bukkit.getPlayer(input[0])
 	}
 
 	override fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String> {
 		val playerList = mutableListOf<String>()
+		playerList += "*"
 		for (onlinePlayer in Bukkit.getOnlinePlayers()) {
 			if (isVanished(onlinePlayer) && !sender.isOp)
 				continue
@@ -27,5 +28,9 @@ object PlayerType : ArgumentType(Player::class.java) {
 			if (meta.asBoolean()) return true
 		}
 		return false
+	}
+
+	public override fun wildcard(sender: CommandSender, vararg input: String): MutableList<Any?> {
+		return Bukkit.getOnlinePlayers().toMutableList()
 	}
 }

@@ -11,6 +11,7 @@ import org.lupus.commands.core.scanner.modifiers.method.CMDPassMod
 import org.lupus.commands.core.scanner.modifiers.method.DefaultMod
 import org.lupus.commands.core.scanner.modifiers.method.FilterPassMod
 import org.lupus.commands.core.scanner.modifiers.method.NotCMDMod
+import org.lupus.commands.core.scanner.modifiers.params.WildCardMod
 
 object DefaultModifiers {
     val clazzMods = mutableListOf(ContinuousMod, HelpMod)
@@ -26,6 +27,6 @@ object DefaultModifiers {
         NoPermModifier,
         SyntaxMod,
     )
-    val paramModifiers = mutableListOf<ParameterModifier>()
+    val paramModifiers = mutableListOf<ParameterModifier>(WildCardMod)
 	val fieldsModifier = mutableListOf(DependencyModifier, NamedDependencyModifier)
 }

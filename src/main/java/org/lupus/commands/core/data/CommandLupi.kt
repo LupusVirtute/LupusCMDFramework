@@ -48,7 +48,8 @@ class CommandLupi(
 	val optionals: HashMap<Int, Array<String>>,
 	val filters: MutableList<FilterFun>,
 	val injectableDependencies: HashMap<Class<*>, Any>,
-	val namedInjectableDependencies: HashMap<String, Any>
+	val namedInjectableDependencies: HashMap<String, Any>,
+	val wildCards: MutableList<Int>
 
 ) : Command(name, description, _syntax, aliases)
 {
@@ -72,6 +73,7 @@ class CommandLupi(
 		get() = LegacyComponentSerializer.legacySection().serialize(StringUtil.processI18n(pluginRegistering, arrayOf(_syntax)))
 
 	val SOMETHING_WRONG = I18nMessage(pluginRegistering, "something-wrong")
+
 
 	val preRunComponents = mutableListOf(
 		PreRunPermissionCheck::class.java.getDeclaredConstructor(CommandLupi::class.java),
@@ -153,9 +155,7 @@ class CommandLupi(
 				return
 			}
 
-			val res = method.invoke(obj, *cmdParams.toTypedArray())
-			if(res != null)
-				sendResponse(sender, res)
+			resolveWildCards(sender, obj, cmdParams)
 			return
 		}
 
@@ -286,6 +286,13 @@ class CommandLupi(
 		for (filter in filters) {
 			tabComplete = filter.filterTabComplete(sender, this, parameter, tabComplete)
 		}
+		for (wildCard in wildCards) {
+			if (wildCard != paramIDX) {
+				continue
+			}
+			tabComplete.remove("*")
+			return tabComplete
+		}
 
 		return tabComplete
 	}
@@ -365,6 +372,40 @@ class CommandLupi(
 			return subCommand.tabComplete(sender, getArgs(offset, args.toTypedArray()).toList())
 		}
 		return null
+	}
+
+	fun resolveWildCards(sender: CommandSender, obj: Any, cmdParams: MutableList<Any>) {
+		if(method == null)
+			return
+
+		if(wildCards.isEmpty()) {
+			val res = method.invoke(obj, *cmdParams.toTypedArray())
+			if(res != null)
+				sendResponse(sender, res)
+			return
+		}
+		for (wildCard in wildCards) {
+			val cmdParam = cmdParams[wildCard]
+			if(cmdParam !is List<*>) {
+				invokeMethodNormally(sender, obj, cmdParams)
+				return
+			}
+			for(param in cmdParam) {
+				param ?: continue
+				val copiedCmdParams = cmdParams.toMutableList()
+				copiedCmdParams[wildCard] = param
+				val res = method.invoke(obj, *copiedCmdParams.toTypedArray())
+
+				if(res != null)
+					sendResponse(sender, res)
+			}
+		}
+	}
+	fun invokeMethodNormally(sender: CommandSender, obj: Any, cmdParams: MutableList<Any>) {
+		method ?: return
+		val res = method.invoke(obj, *cmdParams.toTypedArray())
+		if(res != null)
+			sendResponse(sender, res)
 	}
 
 

@@ -13,12 +13,29 @@ abstract class ArgumentType @JvmOverloads constructor(
 	/**
 	 * Argument name to display in help
 	 */
-	var argumentName: String = "") {
+	var argumentName: String = "",
+	/**
+	 * Is this wildcard instead of conversion
+	 * The wildcard function will be used
+	 */
+ 	var canBeWildCard: Boolean = false) {
 
 
 	abstract fun conversion(sender: CommandSender, vararg input: String): Any?
 	abstract fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String>
 	fun isTheArgumentOfThisType(clazz: Class<out Any>): Boolean {
 		return this.clazz.isAssignableFrom(clazz)
+	}
+
+	fun resolveWildcard(sender: CommandSender, vararg input: String): Any? {
+		val firstInput = input[0]
+		return if(firstInput == "*")
+			wildcard(sender, *input)
+		else
+			conversion(sender, *input)
+	}
+
+	open fun wildcard(sender: CommandSender, vararg input: String): MutableList<Any?> {
+		return mutableListOf()
 	}
 }

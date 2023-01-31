@@ -46,7 +46,10 @@ class PreRunGetCommandParams(command: CommandLupi) : PreRunCommandComponent(comm
                         command.optionals[iterCount] ?: throw Exception("No arguments")
                     else
                         ArrayUtil.getArgs(argumentSpanCounter-argumentSpan, endOffset, args)
-                    parameter.conversion(sender, *argumentsForParameter)
+					if(!parameter.canBeWildCard && command.wildCards.isNotEmpty())
+                    	parameter.conversion(sender, *argumentsForParameter)
+					else
+						parameter.resolveWildcard(sender, *argumentsForParameter)
                 } catch(ex: Exception) {
                     null
                 } ?: return null

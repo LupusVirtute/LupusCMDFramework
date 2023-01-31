@@ -56,6 +56,7 @@ open class CommandBuilder(
 	val parameters: MutableList<ArgumentType> = mutableListOf()
 	val subCommands: MutableList<CommandBuilder> = mutableListOf()
 	val optionals = hashMapOf<Int, Array<String>>()
+	val wildCards = mutableListOf<Int>()
 
 
 
@@ -195,7 +196,8 @@ open class CommandBuilder(
 			optionals,
 			filters,
 			injectableDependencies,
-			namedInjectableDependencies
+			namedInjectableDependencies,
+			wildCards
 		)
 
 		outMsg(" ")
