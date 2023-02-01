@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Level
 import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.annotations.Dependency
+import org.lupus.commands.core.annotations.NamedDependency
 import org.lupus.commands.core.annotations.method.CMDPass
 import org.lupus.commands.core.annotations.method.Syntax
 import org.lupus.commands.core.annotations.parameters.Optional
@@ -79,12 +80,19 @@ open class CommandBuilder(
 	val injectableDependencies: HashMap<Class<*>, Any> = hashMapOf()
 	val namedInjectableDependencies: HashMap<String, Any> = hashMapOf()
 
+	private val fieldScanAnnotationsFilter = listOf(
+		Dependency::class.java,
+		NamedDependency::class.java
+	)
+
 	fun runFieldScan() {
 		for (declaredField in declaringClazz.declaredFields) {
-			if (!declaredField.isAnnotationPresent(Dependency::class.java)) continue
-			val annotation = declaredField.getAnnotation(Dependency::class.java)
-			for (fieldModifier in fieldsModifiers) {
-				fieldModifier.modify(this, annotation, declaredField)
+			for (clazz in fieldScanAnnotationsFilter) {
+				if (!declaredField.isAnnotationPresent(clazz)) continue
+				val annotation = declaredField.getAnnotation(clazz)
+				for (fieldModifier in fieldsModifiers) {
+					if(fieldModifier.isThisAnnotationValid(annotation)) fieldModifier.modify(this, annotation, declaredField)
+				}
 			}
 		}
 	}

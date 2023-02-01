@@ -6,7 +6,7 @@
 
 	<groupId>org.lupus</groupId>
 	<artifactId>LCommandFramework</artifactId>
-	<version>0.8.0</version>
+	<version>0.8.1</version>
 
 	<name>LCommandFramework</name>
 
@@ -179,6 +179,11 @@
 			<artifactId>kotlin-test-junit</artifactId>
 			<version>${kotlin.version}</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jetbrains.kotlin</groupId>
+			<artifactId>kotlin-reflect</artifactId>
+			<version>${kotlin.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
