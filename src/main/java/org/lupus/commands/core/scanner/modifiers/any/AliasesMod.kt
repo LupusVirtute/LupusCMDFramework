@@ -6,7 +6,7 @@ import org.lupus.commands.core.scanner.modifiers.AnyModifier
 
 object AliasesMod : AnyModifier(Aliases::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Any) {
-        isThisAnnotationInValid(annotation)
+        isThisAnnotationValid(annotation)
 
         annotation as Aliases
         val aliases = annotation.aliases.split(annotation.delimeter)

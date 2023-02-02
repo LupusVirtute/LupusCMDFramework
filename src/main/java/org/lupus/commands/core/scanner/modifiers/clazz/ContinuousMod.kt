@@ -7,7 +7,7 @@ import org.lupus.commands.core.scanner.modifiers.ClazzModifier
 
 object ContinuousMod : ClazzModifier(Continuous::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Class<out Any>) {
-        isThisAnnotationInValid(annotation)
+        isThisAnnotationValid(annotation)
         cmdBuilder.flags.add(CommandFlag.CONTINUOUS)
     }
 }

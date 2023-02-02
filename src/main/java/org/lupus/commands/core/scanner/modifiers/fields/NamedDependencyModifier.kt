@@ -9,7 +9,7 @@ import java.lang.reflect.Field
 
 object NamedDependencyModifier : FieldsModifier(NamedDependency::class.java) {
 	override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Field) {
-		if (!isThisAnnotationInValid(annotation)) {
+		if (!isThisAnnotationValid(annotation)) {
 			return
 		}
 		val name = objModified.name

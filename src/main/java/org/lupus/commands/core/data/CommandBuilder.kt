@@ -87,7 +87,7 @@ open class CommandBuilder(
 				if (!declaredField.isAnnotationPresent(clazz)) continue
 				val annotation = declaredField.getAnnotation(clazz)
 				for (fieldModifier in fieldsModifiers) {
-					if(!fieldModifier.isThisAnnotationInValid(annotation)) fieldModifier.modify(this, annotation, declaredField)
+					if(fieldModifier.isThisAnnotationValid(annotation)) fieldModifier.modify(this, annotation, declaredField)
 				}
 			}
 		}

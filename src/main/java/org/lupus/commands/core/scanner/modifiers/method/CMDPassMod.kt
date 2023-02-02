@@ -7,7 +7,7 @@ import java.lang.reflect.Method
 
 object CMDPassMod : MethodModifier(CMDPass::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Method) {
-        isThisAnnotationInValid(annotation)
+        isThisAnnotationValid(annotation)
         annotation as CMDPass
         val cmdPath = annotation.commandPath
         cmdBuilder.addSubCommandPass("${cmdBuilder.packageName}.$cmdPath")

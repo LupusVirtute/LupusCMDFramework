@@ -7,7 +7,7 @@ import org.lupus.commands.core.scanner.modifiers.ClazzModifier
 
 object HelpMod : ClazzModifier(HelpCMD::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Class<out Any>) {
-        isThisAnnotationInValid(annotation)
+        isThisAnnotationValid(annotation)
         cmdBuilder.flags.add(CommandFlag.HELP)
     }
 }

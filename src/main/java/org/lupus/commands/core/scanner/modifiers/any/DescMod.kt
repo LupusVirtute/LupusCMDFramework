@@ -6,7 +6,7 @@ import org.lupus.commands.core.scanner.modifiers.AnyModifier
 
 object DescMod : AnyModifier(Desc::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Any) {
-        isThisAnnotationInValid(annotation)
+        isThisAnnotationValid(annotation)
         annotation as Desc
         cmdBuilder.description = annotation.desc
     }

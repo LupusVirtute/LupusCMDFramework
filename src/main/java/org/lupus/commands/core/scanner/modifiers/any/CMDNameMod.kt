@@ -6,7 +6,7 @@ import org.lupus.commands.core.scanner.modifiers.AnyModifier
 
 object CMDNameMod : AnyModifier(CMDName::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Any) {
-        isThisAnnotationInValid(annotation)
+        isThisAnnotationValid(annotation)
         annotation as CMDName
         val name = annotation.name
         cmdBuilder.name = name
