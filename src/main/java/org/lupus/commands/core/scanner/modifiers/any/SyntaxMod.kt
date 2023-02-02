@@ -6,7 +6,7 @@ import org.lupus.commands.core.scanner.modifiers.AnyModifier
 
 object SyntaxMod : AnyModifier(Syntax::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Any) {
-        isThisAnnotationValid(annotation)
+        isThisAnnotationInValid(annotation)
         annotation as Syntax
         cmdBuilder.syntax = StringBuilder(annotation.syntax)
     }

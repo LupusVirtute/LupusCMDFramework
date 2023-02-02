@@ -6,16 +6,12 @@ import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
 import org.lupus.commands.core.annotations.Dependency
 import org.lupus.commands.core.annotations.NamedDependency
-import org.lupus.commands.core.annotations.method.CMDPass
-import org.lupus.commands.core.annotations.method.Syntax
 import org.lupus.commands.core.annotations.parameters.Optional
 import org.lupus.commands.core.annotations.parameters.ParamName
 import org.lupus.commands.core.arguments.ArgumentType
 import org.lupus.commands.core.arguments.ArgumentTypeList
-import org.lupus.commands.core.messages.I18n
 import org.lupus.commands.core.messages.I18nMessage
 import org.lupus.commands.core.scanner.ClazzScanner
-import org.lupus.commands.core.scanner.DefaultModifiers
 import org.lupus.commands.core.scanner.modifiers.AnyModifier
 import org.lupus.commands.core.scanner.modifiers.FieldsModifier
 import org.lupus.commands.core.scanner.modifiers.ParameterModifier
@@ -91,7 +87,7 @@ open class CommandBuilder(
 				if (!declaredField.isAnnotationPresent(clazz)) continue
 				val annotation = declaredField.getAnnotation(clazz)
 				for (fieldModifier in fieldsModifiers) {
-					if(fieldModifier.isThisAnnotationValid(annotation)) fieldModifier.modify(this, annotation, declaredField)
+					if(!fieldModifier.isThisAnnotationInValid(annotation)) fieldModifier.modify(this, annotation, declaredField)
 				}
 			}
 		}

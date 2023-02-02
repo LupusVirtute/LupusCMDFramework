@@ -4,9 +4,9 @@ import org.lupus.commands.core.data.CommandBuilder
 
 abstract class BaseModifier<T>(val annotation: Class<out Annotation>)  {
     abstract fun modify(cmdBuilder: CommandBuilder,annotation: Annotation, objModified: T)
-    fun isThisAnnotationValid(annotation: Annotation): Boolean {
+    fun isThisAnnotationInValid(annotation: Annotation): Boolean {
         if (annotation::class.java.isAssignableFrom(this.annotation)) {
-            throw IllegalStateException("Invalid annotation type")
+           	return false
         }
         return true
     }

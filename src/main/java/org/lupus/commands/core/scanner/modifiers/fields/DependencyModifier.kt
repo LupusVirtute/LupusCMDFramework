@@ -9,7 +9,7 @@ import java.lang.reflect.Field
 
 object DependencyModifier : FieldsModifier(Dependency::class.java) {
 	override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Field) {
-		if (!isThisAnnotationValid(annotation)) {
+		if (!isThisAnnotationInValid(annotation)) {
 			return
 		}
 		val type = objModified.type

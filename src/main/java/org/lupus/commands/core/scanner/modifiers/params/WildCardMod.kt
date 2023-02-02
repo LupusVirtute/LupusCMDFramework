@@ -7,7 +7,7 @@ import java.lang.reflect.Parameter
 
 object WildCardMod : ParameterModifier(WildCard::class.java) {
 	override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Parameter) {
-		if(!isThisAnnotationValid(annotation))
+		if(!isThisAnnotationInValid(annotation))
 			return
 		val method = cmdBuilder.method ?: return
 		var indexOfParameterWildCard = -1

@@ -8,7 +8,7 @@ import org.lupus.commands.core.scanner.modifiers.AnyModifier
 
 object ConditionsMod : AnyModifier(Conditions::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Any) {
-        isThisAnnotationValid(annotation)
+        isThisAnnotationInValid(annotation)
         annotation as Conditions
         val conditionNames = annotation.conditions
         val names = conditionNames.split(annotation.delimeter)

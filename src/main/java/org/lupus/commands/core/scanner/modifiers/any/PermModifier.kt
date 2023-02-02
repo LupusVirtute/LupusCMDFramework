@@ -7,7 +7,7 @@ import java.lang.StringBuilder
 
 object PermModifier : AnyModifier(Perm::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Any) {
-        isThisAnnotationValid(annotation)
+        isThisAnnotationInValid(annotation)
 
         annotation as Perm
 

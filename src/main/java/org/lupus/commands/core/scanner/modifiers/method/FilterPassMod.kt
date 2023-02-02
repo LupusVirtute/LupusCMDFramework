@@ -8,7 +8,7 @@ import java.lang.reflect.Method
 
 object FilterPassMod : MethodModifier(Filter::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Method) {
-        isThisAnnotationValid(annotation)
+        isThisAnnotationInValid(annotation)
         annotation as Filter
         val filters = annotation.filters.split(annotation.delimeter)
         val functions = filters.mapNotNull { FilterManager[it] }

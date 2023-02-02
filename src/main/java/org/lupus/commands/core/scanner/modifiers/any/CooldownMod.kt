@@ -8,7 +8,7 @@ import org.lupus.commands.core.utils.TimeUtil
 
 object CooldownMod : AnyModifier(Cooldown::class.java) {
     override fun modify(cmdBuilder: CommandBuilder, annotation: Annotation, objModified: Any) {
-        isThisAnnotationValid(annotation)
+        isThisAnnotationInValid(annotation)
         annotation as Cooldown
         val time = TimeUtil.stringTimeToSeconds(annotation.time)
         cmdBuilder.addConditions(
