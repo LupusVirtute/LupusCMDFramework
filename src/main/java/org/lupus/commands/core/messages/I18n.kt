@@ -62,6 +62,14 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		loadResourcesInDir("locales", plugin)
 	}
 
+	fun reload(plugin: JavaPlugin) {
+		if(this[plugin] == null)
+			throw Exception("Plugin not loaded")
+
+		this[plugin] = hashMapOf()
+		loadResourcesInDir("locales", plugin)
+	}
+
 	/**
 	 * Resets I18n initialization process for given plugin <br />
 	 * This basically resets the I18n for the plugin
