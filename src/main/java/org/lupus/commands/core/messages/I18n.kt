@@ -39,11 +39,11 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 		loaded = true
 
 		val properties = Properties()
-		val config = this::class.java.classLoader.getResourceAsStream("locales/messages-en.properties") ?: return
+		val config = this::class.java.classLoader.getResourceAsStream("locales/messages-default.properties") ?: return
 		properties.load(config)
 
 		this[null] = hashMapOf()
-		this[null]!!["en"] = properties
+		this[null]!!["default"] = properties
 
 		currentlyUsedLocales[null] = "en"
 	}
@@ -57,14 +57,6 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 			throw Exception("Plugin already initialized")
 
 		checkPlugin(plugin)
-
-		this[plugin] = hashMapOf()
-		loadResourcesInDir("locales", plugin)
-	}
-
-	fun reload(plugin: JavaPlugin) {
-		if(this[plugin] == null)
-			throw Exception("Plugin not loaded")
 
 		this[plugin] = hashMapOf()
 		loadResourcesInDir("locales", plugin)
@@ -120,7 +112,7 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 			}
 			val locale = listFile.name.split(Regex("messages-"))[1].split(".properties")[0]
 			val stream = listFile.inputStream()
-			addStream(plugin, stream, listFile.name, locale)
+			addStream(plugin, stream, locale, listFile.name)
 		}
 	}
 
@@ -139,7 +131,14 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 			return
 		}
 		val properties = Properties()
+		val defaultConfig = this[null]!!["default"] ?: Properties()
+
+		for(property in defaultConfig.stringPropertyNames()) {
+			properties.setProperty(property,defaultConfig.getProperty(property))
+		}
+
 		properties.load(InputStreamReader(resStream,"utf8"))
+
 		this[plugin]!![locale] = properties
 	}
 
