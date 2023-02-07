@@ -28,6 +28,7 @@ import org.lupus.commands.core.messages.KeyValueBinder
 import org.lupus.commands.core.utils.CommandUtil
 import org.lupus.commands.core.utils.StringUtil
 import java.lang.reflect.Constructor
+import java.lang.reflect.Field
 import java.lang.reflect.Method
 
 class CommandLupi(
@@ -53,10 +54,16 @@ class CommandLupi(
 
 ) : Command(name, description, _syntax, aliases)
 {
+	private val annotations = listOf(
+		NamedDependency::class.java,
+		Dependency::class.java
+	)
+
 	init {
 		this.permission = permission
 		usage = "/$fullName $_syntax"
 		setMethodAccessible()
+		setDependencyFieldsAccessible()
 	}
 	var fullName: String = fullName
 		private set
@@ -464,23 +471,20 @@ class CommandLupi(
 
 	private fun injectDependencies(obj: Any) {
 		for (injectableDependency in injectableDependencies) {
-			for (declaredField in obj::class.java.declaredFields) {
+			for (declaredField in cachedFields) {
 				if(!declaredField.isAnnotationPresent(Dependency::class.java)) continue
 
 				if (injectableDependency.key != declaredField.type) continue
 
-				declaredField.isAccessible = true
 
 				declaredField.set(obj, injectableDependency.value)
 			}
 		}
 		for(injectableDependency in namedInjectableDependencies) {
-			for (declaredField in obj::class.java.declaredFields) {
+			for (declaredField in cachedFields) {
 				if(!declaredField.isAnnotationPresent(NamedDependency::class.java)) continue
 
 				if (injectableDependency.key != declaredField.name) continue
-
-				declaredField.isAccessible = true
 
 				declaredField.set(obj, injectableDependency.value)
 			}
@@ -490,5 +494,30 @@ class CommandLupi(
 	private fun setMethodAccessible() {
 		method ?: return
 		method.isAccessible = true
+	}
+
+	private lateinit var cachedFields: MutableList<Field>
+
+	private fun setDependencyFieldsAccessible() {
+		cachedFields = mutableListOf()
+		val fields = declaringClazz.declaredFields
+		for (field in fields) {
+			val fieldAnnotations = field.annotations
+			var ableToModify = false
+			for (fieldAnnotation in fieldAnnotations) {
+				if (!checkAnnotation(fieldAnnotation)) continue
+				ableToModify = true
+			}
+			if(!ableToModify) continue
+			field.isAccessible = true
+			cachedFields.add(field)
+		}
+	}
+	private fun checkAnnotation(annotation: Annotation): Boolean {
+		for(ann in annotations) {
+			if(ann.isAssignableFrom(annotation::class.java))
+				return true
+		}
+		return false
 	}
 }
