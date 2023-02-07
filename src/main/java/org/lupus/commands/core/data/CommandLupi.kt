@@ -56,6 +56,7 @@ class CommandLupi(
 	init {
 		this.permission = permission
 		usage = "/$fullName $_syntax"
+		setMethodAccessible()
 	}
 	var fullName: String = fullName
 		private set
@@ -484,5 +485,10 @@ class CommandLupi(
 				declaredField.set(obj, injectableDependency.value)
 			}
 		}
+	}
+
+	private fun setMethodAccessible() {
+		method ?: return
+		method.isAccessible = true
 	}
 }
