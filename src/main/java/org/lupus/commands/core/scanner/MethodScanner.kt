@@ -36,6 +36,7 @@ class MethodScanner(
 		}
 		if(Modifier.isPrivate(method.modifiers)) {
 			outMsg("[LCF] INFO: Command method ${method.name} was found to be private aborting...")
+			return null
 		}
 
 		val commandName = method.name
