@@ -5,4 +5,4 @@ package org.lupus.commands.core.annotations.parameters
  * TODO
  */
 @Target(AnnotationTarget.VALUE_PARAMETER)
-annotation class Optional(val default: String)
+annotation class Optional(val defaultValue: String)

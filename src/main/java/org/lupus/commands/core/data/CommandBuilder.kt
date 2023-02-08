@@ -106,7 +106,7 @@ open class CommandBuilder(
 
 		val optional = parameter.getAnnotation(Optional::class.java) ?: null
 		if(optional != null)
-			optionals[parameterCounter] = optional.default.split("|").toTypedArray()
+			optionals[parameterCounter] = optional.defaultValue.split("|").toTypedArray()
 		parameterCounter++
 
 		for (paramModifier in paramModifiers) {
