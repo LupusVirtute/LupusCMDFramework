@@ -53,14 +53,25 @@ class PreRunPickSubCommand(command: CommandLupi) : PreRunCommandComponent(comman
         for (subCommand in command.subCommands) {
             val commandFullName = subCommand.fullName
             val syntax = subCommand.rawSyntax
-            val desc = subCommand.description
 
-            val commandFullNameBinded = KeyValueBinder("command", commandFullName)
-            val syntaxKeyValue = KeyValueBinder("syntax", syntax)
-            val descKeyValue = KeyValueBinder("desc", desc)
-            val idxKeyValue = KeyValueBinder("idx", idx.toString())
+			val isDescriptionI18nComponent = subCommand.isDescriptionI18nComponent
 
-            val i18nHelp = I18nMessage(command.pluginRegistering, "help-syntax", commandFullNameBinded, syntaxKeyValue, descKeyValue, idxKeyValue)
+            val commandFullNameBinded = Placeholder.parsed("command", commandFullName)
+
+			val syntaxKeyValue = Placeholder.parsed("syntax", syntax)
+
+			val descKeyValue =
+				if(isDescriptionI18nComponent) Placeholder.component("desc", subCommand.descriptionComponent)
+				else Placeholder.parsed("desc", subCommand.description)
+
+			val idxKeyValue = Placeholder.parsed("idx", idx.toString())
+
+            val i18nHelp = I18nMessage(command.pluginRegistering, "help-syntax", arrayOf(
+					commandFullNameBinded,
+					syntaxKeyValue,
+					descKeyValue,
+					idxKeyValue
+				))
 
             i18nHelp.send(sender)
             idx++

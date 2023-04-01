@@ -97,11 +97,16 @@ class CommandLupi(
 		I18nResponseComponent::class.java.getDeclaredConstructor(CommandLupi::class.java)
 	)
 
+	val isDescriptionI18nComponent get() = StringUtil.isThatI18nSyntax(description)
+
+	val descriptionComponent get() = StringUtil.processI18n(pluginRegistering, arrayOf(description))
+
 	override fun getDescription(): String {
 		return StringUtil.componentToString(
 			StringUtil.processI18n(pluginRegistering, arrayOf(description))
 		)
 	}
+
 	override fun execute(sender: CommandSender, commandLabel: String, args: Array<out String>): Boolean {
 		if (!hasFlag(CommandFlag.ASYNC))
 			runCommand(sender, args)
