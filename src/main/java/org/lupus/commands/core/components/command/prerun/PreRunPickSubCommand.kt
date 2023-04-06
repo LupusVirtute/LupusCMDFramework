@@ -55,7 +55,7 @@ class PreRunPickSubCommand(command: CommandLupi) : PreRunCommandComponent(comman
 
 			val isDescriptionI18nComponent = subCommand.isDescriptionI18nComponent
 
-            val commandFullNameBinded = Placeholder.parsed("command", command.name)
+            val commandFullNameBinded = Placeholder.parsed("command", "${command.name} ${subCommand.name}")
 
 			val syntaxKeyValue = Placeholder.component("syntax", syntax)
 
