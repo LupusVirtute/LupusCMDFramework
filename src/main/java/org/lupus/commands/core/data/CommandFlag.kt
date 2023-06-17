@@ -4,5 +4,6 @@ enum class CommandFlag {
     HELP,
     ASYNC,
     CONTINUOUS,
-    NO_PERM
+    NO_PERM,
+	PERMISSION_OVERRIDE
 }

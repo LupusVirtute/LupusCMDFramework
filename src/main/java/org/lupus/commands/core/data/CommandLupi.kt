@@ -441,7 +441,10 @@ class CommandLupi(
 		return arguments
 	}
 	fun getNameSpace(): NamespacedKey {
-		val name = this.permission ?: this.fullName.replace(' ', '_')
+		val name = if(this.permission.isNullOrEmpty())
+			this.fullName.replace(' ', '_')
+		else
+			this.permission ?: "NO-KEY-FOUND"
 		return NamespacedKey(this.pluginRegistering, name)
 	}
 
