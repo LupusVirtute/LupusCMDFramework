@@ -2,6 +2,7 @@ package org.lupus.commands.core.scanner
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
+import io.github.classgraph.ClassGraph
 import io.papermc.lib.PaperLib
 import org.bukkit.Bukkit
 import org.bukkit.Server
@@ -23,11 +24,6 @@ import org.lupus.commands.core.scanner.DefaultModifiers.paramModifiers
 import org.lupus.commands.core.utils.FileUtil
 import org.lupus.commands.core.utils.LogUtil.outMsg
 import org.lupus.commands.core.utils.ReflectionUtil
-import org.reflections.Reflections
-import org.reflections.scanners.SubTypesScanner
-import org.reflections.scanners.TypeAnnotationsScanner
-import org.reflections.util.ClasspathHelper
-import org.reflections.util.ConfigurationBuilder
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.Path
@@ -57,17 +53,10 @@ class Scanner(
 		outMsg("[LCF] Reflections scan started")
 		var timing = System.currentTimeMillis()
 
-		val reflections = Reflections(
-			ConfigurationBuilder()
-				.setScanners(
-					SubTypesScanner(false), TypeAnnotationsScanner()
-				)
-				.setUrls(
-					ClasspathHelper.forClassLoader(
-						pluginClazzLoader
-					)
-				)
-		)
+		val reflections = ClassGraph()
+			.enableAllInfo()
+			.acceptPackages(packageName)
+			.scan()
 
 		outMsg("[LCF] Reflections scan ended")
 		outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
@@ -75,9 +64,9 @@ class Scanner(
 		outMsg("[LCF] Performing scan for plugin ${clazz.simpleName}")
 
 		timing = System.currentTimeMillis()
-		val res = reflections.allTypes.filter {
+		val res = reflections.allClasses.loadClasses().filter {
 			val pattern =  Regex("$packageName.*($namingSchema)")
-			it.contains(pattern)
+			it.simpleName.contains(pattern)
 		}
 
 		outMsg("")
