@@ -230,7 +230,7 @@ open class CommandBuilder(
 	}
 	private fun getPerm(): String {
 		if(method != null)
-			if (hasFlag(CommandFlag.NO_PERM) || supCommand?.hasFlag(CommandFlag.NO_PERM) == true)
+			if (!hasFlag(CommandFlag.PERMISSION_OVERRIDE) && (hasFlag(CommandFlag.NO_PERM) || supCommand?.hasFlag(CommandFlag.NO_PERM) == true))
 				return ""
 		var perm = plugin.name
 		val supCommandPrefix = supCommand?.permission ?: ""
