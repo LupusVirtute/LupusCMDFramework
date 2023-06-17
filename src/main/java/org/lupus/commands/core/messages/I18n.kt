@@ -1,5 +1,6 @@
 package org.lupus.commands.core.messages
 
+import io.github.classgraph.ClassGraph
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
@@ -8,14 +9,11 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.apache.logging.log4j.core.tools.picocli.CommandLine.InitializationException
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
-import org.reflections.Reflections
-import org.reflections.scanners.ResourcesScanner
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.*
 import java.util.logging.Level
-import java.util.regex.Pattern
 import kotlin.collections.HashMap
 
 object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
@@ -79,20 +77,21 @@ object I18n : HashMap<JavaPlugin?, MutableMap<String, Properties>>() {
 	 * @param plugin Plugin that translations will be loaded for
 	 */
 	fun loadResourcesInDir(dir: String, plugin: JavaPlugin? = null) {
-		val refl =
-			Reflections("$dir/",ResourcesScanner())
+		val scanResult = ClassGraph()
+			.acceptPaths("locales/")
+			.scan()
 
-		val resources = refl.getResources(Pattern.compile("[^.]*.properties"))
+		val resources = scanResult.getResourcesWithExtension(".properties")
 
 		for (resource in resources) {
-			val locale = resource.split(Regex("messages-"))[1].split(".properties")[0]
+			val locale = resource.path.split(Regex("messages-"))[1].split(".properties")[0]
 
 			val resStream: InputStream? = if (plugin == null)
-				this::class.java.getResourceAsStream(resource)
+				resource.open()
 			else
-				plugin.getResource(resource)
+				resource.open()
 
-			addStream(plugin, resStream, locale, resource)
+			addStream(plugin, resStream, locale, resource.path)
 		}
 
 		if (plugin == null)

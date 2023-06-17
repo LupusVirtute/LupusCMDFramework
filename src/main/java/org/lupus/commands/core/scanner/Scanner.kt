@@ -49,11 +49,11 @@ class Scanner(
         initPluginTabComplete(plugin)
 
         this.packageName = packageName
-		val clazz = plugin::class.java
+		val pluginClazz = plugin::class.java
 		outMsg("[LCF] Reflections scan started")
 		var timing = System.currentTimeMillis()
 
-		val reflections = ClassGraph()
+		val scanResult = ClassGraph()
 			.enableAllInfo()
 			.acceptPackages(packageName)
 			.scan()
@@ -61,18 +61,19 @@ class Scanner(
 		outMsg("[LCF] Reflections scan ended")
 		outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
 
-		outMsg("[LCF] Performing scan for plugin ${clazz.simpleName}")
+		outMsg("[LCF] Performing scan for plugin ${pluginClazz.simpleName}")
 
 		timing = System.currentTimeMillis()
-		val res = reflections.allClasses.loadClasses().filter {
+		val classResults = scanResult.allClasses.loadClasses().filter {
 			val pattern =  Regex("$packageName.*($namingSchema)")
-			it.simpleName.contains(pattern)
+			it.canonicalName ?: return@filter false
+			it.canonicalName.contains(pattern)
 		}
 
 		outMsg("")
 		outMsg("")
 		outMsg("")
-		outMsg("[LCF] Stopped scanning classes found ${res.size} applicable classes")
+		outMsg("[LCF] Stopped scanning classes found ${classResults.size} applicable classes")
 		outMsg("\tTime elapsed = ${System.currentTimeMillis() - timing}ms")
 		outMsg("[LCF] Starting to scan classes...")
 
@@ -91,12 +92,11 @@ class Scanner(
 
 		val results = mutableListOf<List<CommandLupi>>()
 
-		for (re in res) {
+		for (secondClazz in classResults) {
 			threadsRunning.incrementAndGet()
 			object : BukkitRunnable() {
 				override fun run() {
-					outMsg("[LCF] Scanning $re")
-					val secondClazz = clazz.classLoader.loadClass(re)
+					outMsg("[LCF] Scanning ${secondClazz.simpleName}")
 
 					if (ClazzScanner.isClazzSubCommand(secondClazz)) {
 						threadsRunning.decrementAndGet()
@@ -119,7 +119,7 @@ class Scanner(
 						ex.printStackTrace()
 					}
 					threadsRunning.decrementAndGet()
-					outMsg("[LCF] Scan of $re ended successfully")
+					outMsg("[LCF] Scan of $secondClazz ended successfully")
 				}
 
 			}.runTaskAsynchronously(plugin)
