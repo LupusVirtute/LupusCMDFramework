@@ -40,7 +40,7 @@ class MethodScanner(
 		}
 
 		val commandName = method.name
-		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, method.declaringClass)
+		val cmdBuilder = CommandBuilder(plugin, commandName, packageName, method.declaringClass, supCommand)
 
 		cmdBuilder.anyModifiers = anyModifiers
 		cmdBuilder.paramModifiers = paramModifiers

@@ -24,7 +24,8 @@ open class CommandBuilder(
 	var plugin: JavaPlugin,
 	var name: String,
 	val packageName: String,
-	val declaringClazz: Class<*>
+	val declaringClazz: Class<*>,
+	val parent: CommandBuilder? = null
 ) {
 	private val pluginClazzLoader: ClassLoader = plugin::class.java.classLoader
 	var noCMD: Boolean = false
@@ -54,7 +55,6 @@ open class CommandBuilder(
 	val subCommands: MutableList<CommandBuilder> = mutableListOf()
 	val optionals = hashMapOf<Int, Array<String>>()
 	val wildCards = mutableListOf<Int>()
-
 
 
 
@@ -230,7 +230,7 @@ open class CommandBuilder(
 	}
 	private fun getPerm(): String {
 		if(method != null)
-			if (hasFlag(CommandFlag.NO_PERM))
+			if (hasFlag(CommandFlag.NO_PERM) || supCommand?.hasFlag(CommandFlag.NO_PERM) == true)
 				return ""
 		var perm = plugin.name
 		val supCommandPrefix = supCommand?.permission ?: ""
