@@ -61,4 +61,4 @@ There's a lot to do I want to do here's a list of work I want to be done <br/>
 - [ ] Python script to show permission nodes for your code with tree graph or something
 - [ ] Test some edge cases
 - [ ] Add support for various platforms like Velocity
-- [ ] Test official Java Support
+- [x] Test official Java Support  [Repository showing java support](https://github.com/LupusVirtute/LCFJavaDemonstration)
