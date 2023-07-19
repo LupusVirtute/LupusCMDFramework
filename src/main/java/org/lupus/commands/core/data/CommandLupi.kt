@@ -278,7 +278,6 @@ class CommandLupi(
 
 	}
 
-
 	fun tabComplete(sender: CommandSender, args: List<String>): MutableList<String> {
 		var tabComplete = suggestSubCommand(sender, args)
 		// If method is null then it's a sup command
@@ -434,12 +433,7 @@ class CommandLupi(
 		System.arraycopy(args, offset, arguments, 0, endOffset-offset)
 		return arguments
 	}
-	fun getCMDsArgs(offset: Int, args: Array<out Any>): Array<out Any> {
-		var endOffset = args.size
-		val arguments = Array<Any>(endOffset-offset) { "$it" }
-		System.arraycopy(args, offset, arguments, 0, endOffset-offset)
-		return arguments
-	}
+
 	fun getNameSpace(): NamespacedKey {
 		val name = if(this.permission.isNullOrEmpty())
 			this.fullName.replace(' ', '_')
@@ -464,13 +458,6 @@ class CommandLupi(
 			.registerTypeAdapter(CommandLupi::class.java, CommandLupiSerializer())
 			.create()
 	}
-
-	fun toJson() : String {
-		this.method?.isAccessible = false
-		return getGson()
-			.toJson(this)
-	}
-
 
 	fun toGsonTree(): JsonElement {
 		return getGson()
