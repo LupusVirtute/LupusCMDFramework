@@ -6,7 +6,7 @@
 
 	<groupId>org.lupus</groupId>
 	<artifactId>LCommandFramework</artifactId>
-	<version>0.8.8.0</version>
+	<version>0.8.9</version>
 
 	<name>LCommandFramework</name>
 

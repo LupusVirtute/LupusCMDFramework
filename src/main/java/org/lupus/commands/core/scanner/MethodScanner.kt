@@ -62,8 +62,10 @@ class MethodScanner(
     }
 	fun <T> modify(cmdBuilder: CommandBuilder, modifiers: List<BaseModifier<T>>) {
 		for (modifier in modifiers) {
-			val ann = method.getAnnotation(modifier.annotation) ?: continue
-			modifier.modify(cmdBuilder, ann, method as T)
+			val annotations = method.getAnnotationsByType(modifier.annotation) ?: continue
+			for(annotation in annotations) {
+				modifier.modify(cmdBuilder, annotation, method as T)
+			}
 		}
 	}
 }

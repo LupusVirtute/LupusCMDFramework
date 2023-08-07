@@ -7,4 +7,5 @@ package org.lupus.commands.core.annotations.method
  * You just write out example2.AnotherTestingCMD
  */
 @Target(AnnotationTarget.FUNCTION)
+@Repeatable
 annotation class CMDPass(val commandPath: String)
