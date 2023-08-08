@@ -35,9 +35,9 @@ class Scanner(
 ) {
 
 	private var threadsRunning: AtomicInteger = AtomicInteger(0)
-	val pluginClazzLoader: ClassLoader = plugin::class.java.classLoader
 	private var packageName: String = ""
-	val commands: MutableList<CommandLupi> = Collections.synchronizedList(mutableListOf())
+	private val commands: MutableList<CommandLupi> = Collections.synchronizedList(mutableListOf())
+	private val cmdPasses: MutableList<Class<*>> = mutableListOf()
 
 
 	/**
@@ -112,6 +112,7 @@ class Scanner(
 
 							synchronized(commands) {
 								commands.addAll(built)
+								cmdPasses.addAll(command.cmdPasses)
 							}
 						}
 					}
@@ -135,6 +136,12 @@ class Scanner(
 				if(threadsRunning.get() == 0) {
 					if(exportResults)
 						exportResults(results)
+
+					cmdPasses.forEach { cmdPass ->
+						commands.removeAll { command ->
+							command.declaringClazz.isAssignableFrom(cmdPass)
+						}
+					}
 
 					registerBuiltCommands(plugin, commands)
 					cancel()
@@ -207,9 +214,19 @@ class Scanner(
 		 */
 		fun registerCommands(plugin: JavaPlugin, commands: List<CommandBuilder>) {
 			val builtCommands = mutableListOf<CommandLupi>()
+			val cmdPasses = mutableListOf<Class<*>>()
+
 			for (command in commands) {
 				builtCommands.addAll(command.build())
+				cmdPasses.addAll(command.cmdPasses)
 			}
+
+			cmdPasses.forEach { cmdPass ->
+				builtCommands.removeAll { command ->
+					command.declaringClazz.isAssignableFrom(cmdPass)
+				}
+			}
+
 			registerBuiltCommands(plugin, builtCommands)
 		}
 		/**
@@ -220,6 +237,7 @@ class Scanner(
 			val timing = System.currentTimeMillis()
 
 			val commandsToRegister = mutableListOf<CommandLupi>()
+
 
 			for (command in commands) {
 				val lowerCaseName = command.name.lowercase()

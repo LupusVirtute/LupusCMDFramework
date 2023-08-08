@@ -55,7 +55,7 @@ open class CommandBuilder(
 	val subCommands: MutableList<CommandBuilder> = mutableListOf()
 	val optionals = hashMapOf<Int, Array<String>>()
 	val wildCards = mutableListOf<Int>()
-
+	val cmdPasses = mutableListOf<Class<*>>()
 
 
 	var supCommand: CommandBuilder? = null
@@ -161,6 +161,7 @@ open class CommandBuilder(
 			subCommand.injectableDependencies.putAll(this.injectableDependencies)
 			subCommand.namedInjectableDependencies.putAll(this.namedInjectableDependencies)
 			subCommands.addAll(subCommand.build(nameSpace))
+			cmdPasses.addAll(subCommand.cmdPasses)
 		}
 
 		if (hasFlag(CommandFlag.CONTINUOUS))
@@ -219,6 +220,7 @@ open class CommandBuilder(
 		val cmd = ClazzScanner(plugin, packageName).scan(subCommand,true) ?: return
 		cmd.supCommand = this
     	this.subCommands.add(cmd)
+		this.cmdPasses.add(cmd.declaringClazz)
 	}
 
 	fun addConditions(conditions: MutableList<ConditionFun>) {
