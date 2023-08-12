@@ -146,21 +146,29 @@ open class CommandBuilder(
 
 	fun build(previousNameSpace: String = ""): List<CommandLupi> {
 		var previousNameSpace = previousNameSpace
-		if (previousNameSpace.isEmpty())
-			previousNameSpace = name
 
 		val subCommands = mutableListOf<CommandLupi>()
 		if (StringUtil.isThatI18nSyntax(name)) {
 			this.name = StringUtil.getI18nSyntax(plugin, listOf(name)).getI18nUnformatted()
 		}
 
+		if (previousNameSpace.isEmpty())
+			previousNameSpace = name
+
 		for (subCommand in this.subCommands) {
-			var nameSpace = subCommand.name
-			if (!hasFlag(CommandFlag.CONTINUOUS) && !subCommand.hasFlag(CommandFlag.CONTINUOUS))
+			var nameSpace = previousNameSpace
+
+			if (StringUtil.isThatI18nSyntax(subCommand.name)) {
+				subCommand.name = StringUtil.getI18nSyntax(plugin, listOf(subCommand.name)).getI18nUnformatted()
+			}
+
+			if (!hasFlag(CommandFlag.CONTINUOUS) && !subCommand.hasFlag(CommandFlag.CONTINUOUS)) {
 				nameSpace +=
 					"${this.syntax} ${subCommand.name} "
-						// Replace double space if any exists
-						.replace("  ", " ")
+				nameSpace = nameSpace
+					// Replace double space if any exists
+					.replace("  ", " ")
+			}
 
 			subCommand.injectableDependencies.putAll(this.injectableDependencies)
 			subCommand.namedInjectableDependencies.putAll(this.namedInjectableDependencies)
