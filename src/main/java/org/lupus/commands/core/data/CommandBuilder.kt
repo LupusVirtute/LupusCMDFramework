@@ -150,6 +150,10 @@ open class CommandBuilder(
 			previousNameSpace = name
 
 		val subCommands = mutableListOf<CommandLupi>()
+		if (StringUtil.isThatI18nSyntax(name)) {
+			this.name = StringUtil.getI18nSyntax(plugin, listOf(name)).getI18nUnformatted()
+		}
+
 		for (subCommand in this.subCommands) {
 			var nameSpace = subCommand.name
 			if (!hasFlag(CommandFlag.CONTINUOUS) && !subCommand.hasFlag(CommandFlag.CONTINUOUS))
