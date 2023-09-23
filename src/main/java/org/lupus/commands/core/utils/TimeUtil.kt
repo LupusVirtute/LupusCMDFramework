@@ -5,9 +5,11 @@ import java.time.Instant
 object TimeUtil {
     val numberRegex = "\\d*".toRegex()
     val timeRegex = "(\\d*mo)|(\\d*d)|(\\d*h)|(\\d*m)|(\\d*s)".toRegex()
+
     fun stringTimeToInstant(input: String): Instant {
         return Instant.now().plusSeconds(stringTimeToSeconds(input))
     }
+
     fun stringTimeToSeconds(input: String): Long {
         val values = timeRegex.findAll(input)
         var seconds = 0L
@@ -39,9 +41,10 @@ object TimeUtil {
             epochSecond -= calcRest*timeClassifier.numberValue
             builder.append(output).append(' ')
         }
-		builder.removeSuffix(" ")
+		builder = builder.removeSuffix(" ")
         return builder.toString()
     }
+
     private fun classifyAndCheck(classifier: TimeClassifier, input: String): Long {
         if (!classifier.classifies(input)) return 0
         return classifier.parse(input)
@@ -53,11 +56,7 @@ object TimeUtil {
         TimeClassifier("h\$", 3600L),
         TimeClassifier("m\$", 60L),
         TimeClassifier("s\$", 1L),
-
-
-        )
-
-
+    )
 
     class TimeClassifier(
         val identifier: String,
