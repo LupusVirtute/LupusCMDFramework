@@ -31,7 +31,7 @@ object TimeUtil {
      */
     fun epochSecondToString(input: Instant): String {
         var epochSecond =  input.epochSecond - Instant.now().epochSecond
-        var builder = StringBuilder()
+        val builder = StringBuilder()
         for (timeClassifier in timeClassifiers) {
             var calcRest = epochSecond
             calcRest /= timeClassifier.numberValue
