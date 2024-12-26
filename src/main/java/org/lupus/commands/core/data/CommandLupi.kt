@@ -50,7 +50,11 @@ class CommandLupi(
 	val filters: MutableList<FilterFun>,
 	val injectableDependencies: HashMap<Class<*>, Any>,
 	val namedInjectableDependencies: HashMap<String, Any>,
-	val wildCards: MutableList<Int>
+	val wildCards: MutableList<Int>,
+	/**
+	 * Represents index of method parameter to amount to take from list
+	 */
+	val limitTabOutput: HashMap<Int, Int>
 
 ) : Command(name, description, _syntax, aliases)
 {
@@ -306,7 +310,11 @@ class CommandLupi(
 			return tabComplete
 		}
 
-		return tabComplete
+		val maybeLimitedTabOutput = limitTabOutput[paramIDX]
+		return if (maybeLimitedTabOutput == null)
+			tabComplete
+		else
+			tabComplete.take(maybeLimitedTabOutput).toMutableList()
 	}
 	fun getParameter(args: List<String>): ArgumentType? {
 		var argSize = args.size

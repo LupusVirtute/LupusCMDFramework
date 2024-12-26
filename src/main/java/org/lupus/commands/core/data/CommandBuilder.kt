@@ -39,6 +39,11 @@ open class CommandBuilder(
 	val flags: MutableSet<CommandFlag> = hashSetOf()
 	val filters: MutableList<FilterFun> = mutableListOf()
 
+	/**
+	 * Represents index of method parameter to amount to take from list
+	 */
+	val limitTabOutputs = hashMapOf<Int, Int>()
+
 
 	var method: Method? = null
 		set(value) {
@@ -214,7 +219,8 @@ open class CommandBuilder(
 			filters,
 			injectableDependencies,
 			namedInjectableDependencies,
-			wildCards
+			wildCards,
+			limitTabOutputs
 		)
 
 		outMsg(" ")
