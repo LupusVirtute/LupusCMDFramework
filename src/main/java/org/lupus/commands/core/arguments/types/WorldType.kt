@@ -17,7 +17,6 @@ object WorldType : ArgumentType(World::class.java, canBeWildCard = true) {
 				it.name
 			}
 			.toMutableList()
-		worlds += "*"
 		return worlds
 	}
 

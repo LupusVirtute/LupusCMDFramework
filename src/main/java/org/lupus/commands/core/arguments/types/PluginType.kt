@@ -17,7 +17,6 @@ object PluginType : ArgumentType(JavaPlugin::class.java, canBeWildCard = true) {
 			.plugins
 			.map { it.name }
 			.toMutableList()
-		plugins += "*"
 		return plugins
 			.filter { it.startsWith(first) }
 			.toMutableList()

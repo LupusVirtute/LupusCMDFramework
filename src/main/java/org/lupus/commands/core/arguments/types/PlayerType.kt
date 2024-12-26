@@ -13,7 +13,6 @@ object PlayerType : ArgumentType(Player::class.java, canBeWildCard = true) {
 
 	override fun autoComplete(sender: CommandSender, vararg input: String): MutableList<String> {
 		val playerList = mutableListOf<String>()
-		playerList += "*"
 		for (onlinePlayer in Bukkit.getOnlinePlayers()) {
 			if (isVanished(onlinePlayer) && !sender.isOp)
 				continue

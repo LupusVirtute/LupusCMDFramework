@@ -16,6 +16,6 @@ object WildCardMod : ParameterModifier(WildCard::class.java) {
 				indexOfParameterWildCard = idx
 			}
 		}
-		cmdBuilder.wildCards += indexOfParameterWildCard
+		cmdBuilder.wildCards += indexOfParameterWildCard-1
 	}
 }

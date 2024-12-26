@@ -306,8 +306,7 @@ class CommandLupi(
 			if (wildCard != paramIDX) {
 				continue
 			}
-			tabComplete.remove("*")
-			return tabComplete
+			tabComplete.add("*")
 		}
 
 		val maybeLimitedTabOutput = limitTabOutput[paramIDX]
