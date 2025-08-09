@@ -1,19 +1,11 @@
 package org.lupus.commands.core.scanner
 
-import org.bukkit.command.CommandSender
 import org.bukkit.plugin.java.JavaPlugin
-import org.lupus.commands.core.annotations.general.NoPerm
-import org.lupus.commands.core.annotations.general.Perm
-import org.lupus.commands.core.annotations.method.Default
-import org.lupus.commands.core.annotations.method.NotCMD
-import org.lupus.commands.core.arguments.ArgumentTypeList
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.scanner.modifiers.*
-import org.lupus.commands.core.scanner.modifiers.method.DefaultMod
-import java.lang.reflect.Method
 import org.lupus.commands.core.utils.LogUtil.outMsg
+import java.lang.reflect.Method
 import java.lang.reflect.Modifier
-import java.util.logging.Level
 
 class MethodScanner(
 	val method: Method,
@@ -28,14 +20,14 @@ class MethodScanner(
 ) {
 
     fun scan(): CommandBuilder? {
+		if (Modifier.isPrivate(method.modifiers)) {
+			outMsg("[LCF] INFO: Command method ${method.name} was found to be private aborting...")
+			return null
+		}
 		if(method.name.contains("\$lambda") || method.name.contains("\$default"))
 			return null
 		if(method.parameterCount == 0) {
 			outMsg("[LCF] INFO: Command method ${method.name} was found to not have executor parameter at least aborting..")
-			return null
-		}
-		if(Modifier.isPrivate(method.modifiers)) {
-			outMsg("[LCF] INFO: Command method ${method.name} was found to be private aborting...")
 			return null
 		}
 

@@ -6,21 +6,27 @@ import org.lupus.commands.core.annotations.method.Default
 import org.lupus.commands.core.data.CommandBuilder
 import org.lupus.commands.core.scanner.modifiers.*
 import org.lupus.commands.core.utils.LogUtil.outMsg
+import java.lang.reflect.Modifier
 
 class ClazzScanner(
-		private val plugin: JavaPlugin,
-		private val packageName: String,
-		private val modifiers: List<ClazzModifier> = DefaultModifiers.clazzMods,
-		private val anyModifiers: List<AnyModifier> = DefaultModifiers.anyMods,
-		private val methodModifiers: List<MethodModifier> = DefaultModifiers.methodMods,
-		private val paramModifiers: List<ParameterModifier> = DefaultModifiers.paramModifiers,
-		private val fieldModifiers: List<FieldsModifier> = DefaultModifiers.fieldsModifier,
-		private val namingSchema: Regex = Regex("Command|CMD"),
-		private val permissionPrefix: String = ""
+	private val plugin: JavaPlugin,
+	private val packageName: String,
+	private val modifiers: List<ClazzModifier> = DefaultModifiers.clazzMods,
+	private val anyModifiers: List<AnyModifier> = DefaultModifiers.anyMods,
+	private val methodModifiers: List<MethodModifier> = DefaultModifiers.methodMods,
+	private val paramModifiers: List<ParameterModifier> = DefaultModifiers.paramModifiers,
+	private val fieldModifiers: List<FieldsModifier> = DefaultModifiers.fieldsModifier,
+	private val namingSchema: Regex = Regex("Command|CMD"),
+	private val permissionPrefix: String = ""
 ) {
-    fun scan(clazz: Class<*>, sub: Boolean = false): CommandBuilder? {
+	fun scan(clazz: Class<*>, sub: Boolean = false): CommandBuilder? {
 		if (isClazzSubCommand(clazz) && !sub) {
 			outMsg("[LCF] Command was found to be sub command without being marked as such aborting", Level.FATAL)
+			return null
+		}
+
+		if (Modifier.isPrivate(clazz.modifiers)) {
+			outMsg("[LCF] Command was found to be private aborting...")
 			return null
 		}
 
@@ -29,7 +35,7 @@ class ClazzScanner(
 			return null
 		val commandName = simpleName.split(namingSchema)[0].lowercase()
 
-		if(!sub)
+		if (!sub)
 			outMsg("[LCF] Found sup command name = $commandName")
 
 		if (commandName == "") {
@@ -70,7 +76,7 @@ class ClazzScanner(
 
 			val command = scanner.scan() ?: continue
 			command.namingSchema = namingSchema
-			if(command.method!!.isAnnotationPresent(Default::class.java)) {
+			if (command.method!!.isAnnotationPresent(Default::class.java)) {
 				cmdBuilder.method = command.method
 				continue
 			}
@@ -80,7 +86,7 @@ class ClazzScanner(
 
 		outMsg("[LCF] Main Command Built!")
 		return cmdBuilder
-    }
+	}
 
 	fun <T> modify(clazz: Class<*>, cmdBuilder: CommandBuilder, modifiers: List<BaseModifier<T>>) {
 		for (modifier in modifiers) {
@@ -88,12 +94,12 @@ class ClazzScanner(
 			modifier.modify(cmdBuilder, ann, clazz as T)
 		}
 	}
+
 	companion object {
 		fun isClazzSubCommand(clazz: Class<*>): Boolean {
 			try {
 				clazz.getDeclaredConstructor()
-			}
-			catch (ex: Exception) {
+			} catch (ex: Exception) {
 				return true
 			}
 			return false

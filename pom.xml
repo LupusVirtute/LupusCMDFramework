@@ -6,7 +6,7 @@
 
 	<groupId>org.lupus</groupId>
 	<artifactId>LCommandFramework</artifactId>
-	<version>0.8.11.1</version>
+	<version>0.8.11.2</version>
 
 	<name>LCommandFramework</name>
 
@@ -61,12 +61,16 @@
 					<execution>
 						<id>java-compile</id>
 						<phase>compile</phase>
-						<goals> <goal>compile</goal> </goals>
+						<goals>
+							<goal>compile</goal>
+						</goals>
 					</execution>
 					<execution>
 						<id>java-test-compile</id>
 						<phase>test-compile</phase>
-						<goals> <goal>testCompile</goal> </goals>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
 					</execution>
 				</executions>
 				<configuration>
