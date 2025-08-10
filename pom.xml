@@ -6,7 +6,7 @@
 
 	<groupId>org.lupus</groupId>
 	<artifactId>LCommandFramework</artifactId>
-	<version>0.8.11.2</version>
+	<version>0.8.11.3</version>
 
 	<name>LCommandFramework</name>
 
@@ -143,7 +143,7 @@
 	<repositories>
 		<repository>
 			<id>papermc-repo</id>
-			<url>https://papermc.io/repo/repository/maven-public/</url>
+			<url>https://repo.papermc.io/repository/maven-public/</url>
 		</repository>
 		<repository>
 			<id>sonatype</id>
@@ -155,7 +155,7 @@
 		<dependency>
 			<groupId>io.papermc</groupId>
 			<artifactId>paperlib</artifactId>
-			<version>1.0.6</version>
+			<version>1.0.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
