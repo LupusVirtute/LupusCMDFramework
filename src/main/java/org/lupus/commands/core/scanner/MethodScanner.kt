@@ -19,14 +19,24 @@ class MethodScanner(
 	val permissionPrefix: String = "",
 ) {
 
-    fun scan(): CommandBuilder? {
+	fun scan(): CommandBuilder? {
 		if (Modifier.isPrivate(method.modifiers)) {
 			outMsg("[LCF] INFO: Command method ${method.name} was found to be private aborting...")
 			return null
 		}
-		if(method.name.contains("\$lambda") || method.name.contains("\$default"))
+		if (method.isBridge || method.isSynthetic) {
+			outMsg("[LCF] INFO: Command method ${method.name} was found to be compiler generated aborting...")
 			return null
-		if(method.parameterCount == 0) {
+		}
+		if (method.name.lowercase().contains("whenmappings")) {
+			outMsg("[LCF] INFO: Command method ${method.name} was found to be kotlin when mappings aborting...")
+			return null
+		}
+		if (method.name.contains("\$lambda") || method.name.contains("\$default")) {
+			outMsg("[LCF] INFO: Command ${method.name} was found to be lambda functions kotlin compiled aborting...")
+			return null
+		}
+		if (method.parameterCount == 0) {
 			outMsg("[LCF] INFO: Command method ${method.name} was found to not have executor parameter at least aborting..")
 			return null
 		}
@@ -47,15 +57,16 @@ class MethodScanner(
 
 		modify(cmdBuilder, anyModifiers)
 		modify(cmdBuilder, methodModifiers)
-		if(cmdBuilder.noCMD)
+		if (cmdBuilder.noCMD)
 			return null
 
 		return cmdBuilder
-    }
+	}
+
 	fun <T> modify(cmdBuilder: CommandBuilder, modifiers: List<BaseModifier<T>>) {
 		for (modifier in modifiers) {
 			val annotations = method.getAnnotationsByType(modifier.annotation) ?: continue
-			for(annotation in annotations) {
+			for (annotation in annotations) {
 				modifier.modify(cmdBuilder, annotation, method as T)
 			}
 		}

@@ -29,7 +29,10 @@ class ClazzScanner(
 			outMsg("[LCF] Command was found to be private aborting...")
 			return null
 		}
-
+		if (clazz.isSynthetic) {
+			outMsg("[LCF] Found command to be compiler generated aborting...")
+			return null
+		}
 		val simpleName = clazz.simpleName
 		if (simpleName == "Companion")
 			return null
